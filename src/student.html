@@ -184,6 +184,12 @@
   .rlist li .mk{font-size:20px;flex:0 0 auto}
   .rlist li.no{background:#FBE9E7}
   .rlist li .sm{font-weight:600;color:var(--ink-soft);font-size:14px;margin-left:auto;text-align:right}
+  .hint{
+    background:#fff;border:2px dashed #cbb89a;border-radius:14px;
+    padding:18px 16px;text-align:center;margin-top:6px;
+  }
+  .hintline{font-size:17px;font-weight:800;margin:0 0 4px}
+  .hintsub{font-size:14.5px;color:var(--ink-soft);margin:0}
   .divider{height:1px;background:#d9c9ac;margin:22px 0}
   .opt{
     display:flex;gap:12px;align-items:flex-start;background:#fff;border:2px solid #ddcdb0;
@@ -430,9 +436,10 @@ function grade(){
   });
   var score = Math.max(0, right*25 - wrong*5);
   var verdict, vsub, tone;
+  /* 판정 문구에도 몇 개가 틀렸는지 드러나지 않게 합니다. */
   if (score >= 90)      { verdict = "🎉 미션 성공!";                          vsub = "우가투스투스의 돌도끼와 똑같아요!"; tone = "good"; }
-  else if (score >= 70) { verdict = "👍 거의 성공!";                          vsub = "아주 가까워요. 한 가지만 더 살펴볼까요?"; tone = "good"; }
-  else if (score >= 50) { verdict = "🤔 다시 생각해 봐요!";                   vsub = "몇 가지 부품이 조금 달라요."; tone = "warn"; }
+  else if (score >= 70) { verdict = "👍 거의 성공!";                          vsub = "아주 가까워요!"; tone = "good"; }
+  else if (score >= 50) { verdict = "🤔 다시 생각해 봐요!";                   vsub = "기억을 한 번 더 더듬어 볼까요?"; tone = "warn"; }
   else                  { verdict = "🔎 우가투스투스의 정보를 다시 확인해 봐요!"; vsub = "괜찮아요. 한 번 더 도전할 수 있어요."; tone = "warn"; }
   return { score:score, right:right, wrong:wrong, per:per, verdict:verdict, vsub:vsub, tone:tone,
            success:(score >= 90) };
@@ -666,30 +673,16 @@ function viewResult(){
     + '<div class="verdict">' + r.verdict + '</div>'
     + '<p class="vsub">' + esc(r.vsub) + '</p>';
 
-  out += '<ul class="rlist">';
-  CATEGORIES.forEach(function(cat){
-    var p = r.per[cat.id];
-    var picked = p.got ? CARDS.filter(function(c){ return c.id === p.got; })[0] : null;
-    if (p.ok){
-      out += '<li><span class="mk">✅</span><span>' + esc(cat.name) + '</span><span class="sm">맞았어요</span></li>';
-    } else if (picked){
-      out += '<li class="no"><span class="mk">❌</span><span>' + esc(cat.name) + '</span><span class="sm">' + esc(picked.label) + '</span></li>';
-    } else {
-      out += '<li class="no"><span class="mk">⬜</span><span>' + esc(cat.name) + '</span><span class="sm">고르지 않았어요</span></li>';
-    }
-  });
-  out += '</ul>';
+  /* 어떤 부품이 맞고 틀렸는지는 보여 주지 않습니다.
+     다시 도전할 수 있으므로, 부품별 정오를 알려 주면 하나씩 바꿔 가며
+     정답을 찾아낼 수 있고 그러면 세 미션의 점수 비교가 무너집니다.
+     정답은 수업 중에 선생님이 공개합니다. */
+  out += '<div class="hint">'
+      +    '<p class="hintline">어떤 재료가 맞았는지는 알려 주지 않아요.</p>'
+      +    '<p class="hintsub">우가투스투스가 알려 준 내용을 다시 떠올려 보세요.</p>'
+      +  '</div>';
 
-  var extras = CARDS.filter(function(c){ return S.selected[c.id] && !c.ok; });
-  if (extras.length){
-    out += '<p class="sub" style="margin:14px 0 6px"><b>잘못 고른 재료</b> (한 개마다 5점씩 깎여요)</p><ul class="rlist">';
-    extras.forEach(function(c){
-      out += '<li class="no"><span class="mk">❌</span><span>' + esc(c.label) + '</span><span class="sm">' + esc(CAT_NAME[c.cat]) + '</span></li>';
-    });
-    out += '</ul>';
-  }
-
-  out += '<p class="vsub" style="margin-top:14px">맞은 재료 ' + r.right + '개 · 잘못 고른 재료 ' + r.wrong + '개 · 걸린 시간 ' + fmtTime(r.seconds) + ' · ' + S.attempt + '번째 도전</p>';
+  out += '<p class="vsub" style="margin-top:14px">걸린 시간 ' + fmtTime(r.seconds) + ' · ' + S.attempt + '번째 도전</p>';
 
   out += '<div class="divider"></div>';
   out += '<h2>이번 미션에서 가장 어려웠던 점은 무엇이었나요?</h2>'
