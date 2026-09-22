@@ -511,6 +511,15 @@ function viewIntro(){
   +       '<div class="bubble">과연 너는 내가 알려준 내용을 정확하게 기억할 수 있을까?</div>'
   +     '</div>'
   +   '</div>'
+  /* 말 미션은 이야기를 한 번만 들려주므로, 시작 전에 소리가 나는지
+     확인할 기회를 줍니다. 음소거 상태로 시작하면 되돌릴 수 없습니다. */
+  +   (MISSION_ID === "speech" && ttsSupported()
+       ? '<div class="notice warn" style="margin:18px 0 0">'
+       +   '🔊 이야기는 <b>소리로만</b> 들려주고 <b>한 번만</b> 들을 수 있어요.<br>'
+       +   '시작하기 전에 소리가 잘 나는지 확인해 보세요.'
+       + '</div>'
+       + '<button class="btn ghost" id="soundcheck" type="button" style="margin-top:10px">🔊 소리 확인하기</button>'
+       : '')
   +   '<form id="f" autocomplete="off">'
   +     '<label for="nm">학생 이름</label>'
   +     '<input type="text" id="nm" inputmode="text" maxlength="20" placeholder="이름을 쓰세요" value="' + esc(saved ? saved.name : "") + '">'
@@ -547,7 +556,8 @@ function viewInfoSpeech(){
       +       '<p class="state" id="sstate">' + (S.speaking ? '잘 들어 보세요…' : '') + '</p>'
       +     '</div>'
       +     '<div class="btnrow">'
-      +       '<button class="btn ghost" id="again">🔊 한 번 더 듣기</button>'
+      /* 다시 듣기 버튼은 두지 않습니다. 말은 한 번 지나가면 끝이라는 것이
+         이 미션의 핵심 경험이라, 반복 청취를 허용하면 비교가 무너집니다. */
       +       '<button class="btn" id="next">' + (S.stepIndex === SPEECH_STEPS.length-1 ? "설명 끝내기" : "다음") + '</button>'
       +     '</div>'
       +   '</div>'
@@ -568,7 +578,7 @@ function viewInfoSpeech(){
   }
   return topbar("설명 듣기", SPEECH_STEPS.length, S.stepIndex)
     + '<div class="panel">' + body + '</div>'
-    + '<p class="foot">소리가 안 들리면 태블릿의 소리를 켜고 [🔊 한 번 더 듣기]를 눌러 보세요.<br>지나간 이야기는 다시 들을 수 없어요.</p>';
+    + '<p class="foot">우가투스투스의 이야기는 <b>한 번만</b> 들려줘요.<br>다시 들을 수 없으니 귀 기울여 들어 보세요.</p>';
 }
 
 function viewInfoPicture(){
@@ -773,7 +783,7 @@ document.addEventListener("submit", function(e){
 document.addEventListener("click", function(e){
   var t = e.target;
 
-  if (t.closest && t.closest("#again")){ speak(SPEECH_STEPS[S.stepIndex]); return; }
+  if (t.closest && t.closest("#soundcheck")){ speak("잘 들리니? 그럼 시작해 보자!"); return; }
 
   if (t.closest && t.closest("#teacherRead")){
     /* 기기에서 소리가 나지 않을 때만 나타나는 선생님용 보조 기능입니다. */
