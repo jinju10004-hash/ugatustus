@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>우가투스투스의 비밀 미션</title>
+<style>
+  :root{
+    --accent:#E2761B; --accent-dark:#A9500C; --accent-soft:#FBE7CF;
+    --cave-1:#241a13; --cave-2:#3b2b1e; --cave-3:#4d3925;
+    --paper:#F7EFE0; --paper-2:#EFE3CD; --ink:#2C2118; --ink-soft:#6B5844;
+    --ok:#2E7D4F; --bad:#C0392B;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #5a4229 0%, transparent 60%),
+      linear-gradient(170deg, var(--cave-2) 0%, var(--cave-1) 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+    font-size:17px; line-height:1.6;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:16px 16px 48px}
+
+  /* ---------- header ---------- */
+  .topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 14px}
+  .badge{
+    display:inline-flex;align-items:center;gap:7px;
+    background:var(--accent);color:#fff;font-weight:800;
+    padding:8px 15px;border-radius:999px;font-size:15px;
+    box-shadow:0 3px 0 var(--accent-dark);
+  }
+  .who{color:#E8D9BE;font-size:14px;font-weight:600;margin-left:auto}
+  .steps{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .pip{height:8px;border-radius:99px;background:#6b5742;flex:1;min-width:14px;transition:background .25s}
+  .pip.on{background:var(--accent)}
+  .stage-label{color:#D9C7A8;font-size:13px;font-weight:700;letter-spacing:.02em}
+
+  /* ---------- panels ---------- */
+  .panel{
+    background:var(--paper);
+    border-radius:var(--radius);
+    padding:22px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35), inset 0 0 0 1px rgba(0,0,0,.05);
+  }
+  h1{font-size:28px;margin:0 0 6px;letter-spacing:-.02em;line-height:1.25}
+  h2{font-size:22px;margin:0 0 10px;line-height:1.3}
+  .sub{color:var(--ink-soft);font-size:15px;margin:0 0 18px}
+  .center{text-align:center}
+
+  /* ---------- character ---------- */
+  .hero{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+  .hero .art{flex:0 0 132px;margin:0 auto}
+  .hero .say{flex:1 1 260px;min-width:0}
+  .bubble{
+    position:relative;background:#fff;border:3px solid var(--ink);
+    border-radius:16px;padding:14px 16px;margin-bottom:10px;font-size:17px;font-weight:600;
+  }
+  .bubble:after{
+    content:'';position:absolute;left:-13px;top:22px;width:0;height:0;
+    border:10px solid transparent;border-right-color:var(--ink);
+  }
+
+  /* ---------- form ---------- */
+  label{display:block;font-weight:800;margin:16px 0 6px;font-size:16px}
+  input[type=text], input[type=number]{
+    width:100%;padding:15px 16px;font-size:18px;border-radius:14px;
+    border:2px solid #cbb89a;background:#fff;font-family:inherit;color:var(--ink);
+  }
+  input:focus{outline:3px solid var(--accent);outline-offset:1px;border-color:transparent}
+  .err{color:var(--bad);font-weight:700;font-size:15px;margin-top:10px;min-height:22px}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;min-height:60px;padding:14px 22px;
+    font-size:20px;font-weight:800;font-family:inherit;
+    color:#fff;background:var(--accent);border:0;border-radius:16px;
+    box-shadow:0 5px 0 var(--accent-dark);cursor:pointer;
+    transition:transform .08s, box-shadow .08s;
+  }
+  .btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--accent-dark)}
+  .btn[disabled]{background:#9c8d7c;box-shadow:0 5px 0 #7a6d5e;cursor:progress}
+  .btn.ghost{
+    background:#fff;color:var(--ink);box-shadow:0 5px 0 #c9b79a;border:2px solid #c9b79a;
+  }
+  .btn.ghost:active{box-shadow:0 1px 0 #c9b79a}
+  .btn.small{min-height:48px;font-size:16px;width:auto;padding:10px 18px}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  .btnrow .btn{flex:1 1 200px}
+
+  /* ---------- info step ---------- */
+  .stepbox{background:#fff;border-radius:16px;padding:22px;border:2px dashed #cbb89a;min-height:120px;display:flex;align-items:center}
+  .steptext{font-size:22px;font-weight:700;line-height:1.55;margin:0}
+
+  /* 말 미션: 글자 없이 '듣고 있는 중'만 보여 줍니다 */
+  .listen{
+    background:#fff;border-radius:16px;border:2px dashed #cbb89a;
+    padding:26px 22px;text-align:center;
+  }
+  .listen .cap{font-size:15px;color:var(--ink-soft);font-weight:700;margin:0 0 4px}
+  .listen .nth{font-size:26px;font-weight:900;margin:0 0 18px}
+  .wave{display:flex;gap:7px;align-items:flex-end;justify-content:center;height:56px}
+  .wave i{width:9px;border-radius:99px;background:var(--accent);height:14px;opacity:.45}
+  .wave.on i{animation:talk .9s ease-in-out infinite}
+  .wave.on i:nth-child(1){animation-delay:0s}
+  .wave.on i:nth-child(2){animation-delay:.12s}
+  .wave.on i:nth-child(3){animation-delay:.24s}
+  .wave.on i:nth-child(4){animation-delay:.36s}
+  .wave.on i:nth-child(5){animation-delay:.48s}
+  .wave.on i:nth-child(6){animation-delay:.6s}
+  .wave.on i:nth-child(7){animation-delay:.72s}
+  @keyframes talk{0%,100%{height:14px;opacity:.45}50%{height:52px;opacity:1}}
+  .listen .state{font-size:17px;font-weight:800;margin:14px 0 0;min-height:26px}
+  @media (prefers-reduced-motion: reduce){ .wave.on i{animation:none;height:32px;opacity:1} }
+  .mural{width:100%;border-radius:14px;display:block;background:#2b2118;cursor:zoom-in}
+  .muralcap{color:var(--ink-soft);font-size:14px;margin:10px 0 0;text-align:center}
+
+  /* ---------- diary ---------- */
+  .diary{
+    background:linear-gradient(#FBF4E4,#F1E4C8);
+    border-radius:14px;padding:22px;border:1px solid #d8c5a0;
+    box-shadow:inset 0 0 40px rgba(150,110,60,.18);
+    font-size:17.5px;line-height:1.95;
+  }
+  .diary p{margin:0 0 14px}
+  .diary p:last-child{margin-bottom:0}
+  .diary .lead{font-weight:800;font-size:19px}
+  .modal{
+    position:fixed;inset:0;background:rgba(15,10,6,.88);z-index:50;
+    display:flex;align-items:center;justify-content:center;padding:16px;
+  }
+  .modal .inner{background:var(--paper);border-radius:16px;max-width:760px;width:100%;max-height:88vh;overflow:auto;padding:20px}
+  .modal img{width:100%;border-radius:12px}
+
+  /* ---------- material cards ---------- */
+  .cat{margin:22px 0 0}
+  .cat h3{font-size:19px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  .cat .chint{color:var(--ink-soft);font-size:14px;margin:0 0 10px}
+  .grid{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
+  .grid.wide{grid-template-columns:1fr}
+  @media(min-width:560px){ .grid{grid-template-columns:repeat(3,1fr)} .grid.wide{grid-template-columns:repeat(2,1fr)} }
+  @media(min-width:860px){ .grid{grid-template-columns:repeat(5,1fr)} .grid.wide{grid-template-columns:repeat(2,1fr)} }
+  .card{
+    background:#fff;border:3px solid #ddcdb0;border-radius:14px;padding:8px;
+    cursor:pointer;text-align:center;transition:border-color .12s, transform .08s, box-shadow .12s;
+    position:relative;display:flex;flex-direction:column;
+  }
+  .card:active{transform:scale(.97)}
+  .card img{width:100%;height:110px;object-fit:contain;display:block;background:#fff;border-radius:8px}
+  .grid.wide .card img{height:74px}
+  .card .cl{font-size:13px;font-weight:700;margin-top:7px;line-height:1.35;color:var(--ink)}
+  .card.sel{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft), 0 6px 14px rgba(0,0,0,.14)}
+  .card .tick{
+    position:absolute;top:-10px;right:-10px;width:32px;height:32px;border-radius:50%;
+    background:var(--accent);color:#fff;font-size:18px;font-weight:900;
+    display:none;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.3);
+  }
+  .card.sel .tick{display:flex}
+  .picked{
+    position:sticky;bottom:0;margin-top:18px;padding:16px 0 8px;z-index:6;
+    background:linear-gradient(transparent, var(--paper) 26%);
+  }
+  .pickcount{font-weight:800;text-align:center;margin-bottom:10px;font-size:16px}
+  .picked .btnrow{margin-top:0}
+  .picked .btnrow .btn{flex:1 1 160px}
+
+  /* ---------- result ---------- */
+  .score{
+    font-size:64px;font-weight:900;line-height:1;text-align:center;margin:6px 0 2px;color:var(--accent);
+  }
+  .score small{font-size:24px;font-weight:800}
+  .verdict{text-align:center;font-size:26px;font-weight:900;margin:8px 0 4px}
+  .vsub{text-align:center;color:var(--ink-soft);margin:0 0 18px;font-size:15px}
+  .rlist{list-style:none;padding:0;margin:0}
+  .rlist li{
+    display:flex;gap:10px;align-items:center;padding:11px 12px;border-radius:12px;
+    background:#fff;margin-bottom:8px;font-weight:700;font-size:16px;
+  }
+  .rlist li .mk{font-size:20px;flex:0 0 auto}
+  .rlist li.no{background:#FBE9E7}
+  .rlist li .sm{font-weight:600;color:var(--ink-soft);font-size:14px;margin-left:auto;text-align:right}
+  .divider{height:1px;background:#d9c9ac;margin:22px 0}
+  .opt{
+    display:flex;gap:12px;align-items:flex-start;background:#fff;border:2px solid #ddcdb0;
+    border-radius:14px;padding:14px;margin-bottom:9px;cursor:pointer;font-weight:700;font-size:16px;
+  }
+  .opt.on{border-color:var(--accent);background:var(--accent-soft)}
+  .opt input{width:22px;height:22px;margin:2px 0 0;accent-color:var(--accent);flex:0 0 auto}
+
+  /* ---------- notices ---------- */
+  .notice{border-radius:14px;padding:14px 16px;font-size:15px;font-weight:600;margin-bottom:14px;line-height:1.55}
+  .notice.warn{background:#FFF3CD;border:2px solid #E6C34A;color:#6B4E00}
+  .notice.bad{background:#FBE3E0;border:2px solid #E3A49C;color:#8A2317}
+  .notice.good{background:#E4F3E9;border:2px solid #9CCBAE;color:#1E5C38}
+  .foot{color:#C9B79A;font-size:13px;text-align:center;margin-top:20px;line-height:1.7}
+
+  .spinner{
+    width:18px;height:18px;border-radius:50%;border:3px solid rgba(255,255,255,.45);
+    border-top-color:#fff;animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .pop{animation:pop .45s cubic-bezier(.2,1.4,.5,1)}
+  @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+  .confetti{position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden}
+  .confetti i{position:absolute;width:10px;height:16px;opacity:.95;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:.9}}
+  @media (prefers-reduced-motion: reduce){ .confetti{display:none} .pop{animation:none} }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+/* ============================================================
+   우가투스투스의 비밀 미션  —  학생용 웹앱
+   MISSION_ID 한 줄만 바꾸면 말 / 그림 / 문자 미션이 됩니다.
+   ============================================================ */
+var MISSION_ID = "__MISSION__";          // "speech" | "picture" | "text"
+
+/* ------------------------------------------------------------
+   ① 선생님 설정 — 결과 저장 주소
+   Google Apps Script 웹앱 URL을 따옴표 안에 붙여넣으세요.
+   비워 두면 결과가 이 기기에만 저장됩니다(경고가 표시됩니다).
+   ------------------------------------------------------------ */
+var CONFIG = {
+  SHEET_ENDPOINT: "",
+  CLASS_LABEL: ""                        // 예: "4학년 1반" (비워도 됩니다)
+};
+
+/* ---------- 이미지 (수업 자료에서 가져온 실제 부품 사진) ---------- */
+var IMG = { /*INJECT_CARDS*/ };
+var MURALS = [ /*INJECT_MURALS*/ ];
+
+/* ---------- 미션 정의 ---------- */
+var MISSIONS = {
+  speech : { name:"말",   emoji:"🗣️", accent:"#E2761B", dark:"#A9500C", soft:"#FBE7CF",
+             title:"말로 전달받아 미션을 해결하라!",
+             intro:"우가투스투스가 하는 말을 잘 들어 보세요. 한 번 지나간 말은 다시 들을 수 없어요." },
+  picture: { name:"그림", emoji:"🎨", accent:"#3E8E4E", dark:"#276234", soft:"#DCEFE0",
+             title:"그림만 보고 미션을 해결하라!",
+             intro:"우가투스투스가 동굴에 남긴 벽화를 보세요. 우리말 설명은 없어요. 그림만으로 알아내야 해요." },
+  text   : { name:"문자", emoji:"📖", accent:"#2F6FD0", dark:"#1D4A90", soft:"#DCE8FA",
+             title:"우가투스투스의 일기를 읽고 미션을 해결하라!",
+             intro:"우가투스투스가 남긴 일기를 읽어 보세요. 일기는 언제든지 다시 읽을 수 있어요." }
+};
+var M = MISSIONS[MISSION_ID];
+
+/* ---------- 재료 ---------- */
+var CATEGORIES = [
+  { id:"st", name:"망치 머리", hint:"도끼의 머리가 될 돌이에요.",        wide:false },
+  { id:"hd", name:"손잡이",    hint:"손으로 잡는 나무예요.",             wide:true  },
+  { id:"vn", name:"넝쿨",      hint:"머리와 손잡이를 묶을 줄이에요.",    wide:false },
+  { id:"or", name:"장신구",    hint:"도끼에 매다는 장식이에요.",         wide:false }
+];
+var CARDS = [
+  { id:"st_ok", cat:"st", ok:true,  label:"이끼 낀 푸른 뾰족돌" },
+  { id:"st_w1", cat:"st", ok:false, label:"흰색 뾰족돌" },
+  { id:"st_w2", cat:"st", ok:false, label:"이끼 낀 푸른 둥근돌" },
+  { id:"st_w3", cat:"st", ok:false, label:"이끼 없는 푸른 네모돌" },
+  { id:"st_w4", cat:"st", ok:false, label:"이끼 낀 검은 뾰족돌" },
+
+  { id:"hd_ok", cat:"hd", ok:true,  label:"긴 흰 나무 · 불에 탐 · 이끼 없음" },
+  { id:"hd_w1", cat:"hd", ok:false, label:"긴 흰 나무 · 불에 탐 · 이끼 있음" },
+  { id:"hd_w2", cat:"hd", ok:false, label:"짧은 흰 나무 · 불에 탐" },
+  { id:"hd_w3", cat:"hd", ok:false, label:"긴 흰 나무 · 불에 타지 않음" },
+  { id:"hd_w4", cat:"hd", ok:false, label:"긴 갈색 나무 · 불에 탐" },
+
+  { id:"vn_ok", cat:"vn", ok:true,  label:"가시 없이 이파리만 있는 넝쿨" },
+  { id:"vn_w1", cat:"vn", ok:false, label:"가시와 이파리가 모두 있는 넝쿨" },
+  { id:"vn_w2", cat:"vn", ok:false, label:"가시만 있는 넝쿨" },
+  { id:"vn_w3", cat:"vn", ok:false, label:"아무것도 없는 넝쿨" },
+
+  { id:"or_ok", cat:"or", ok:true,  label:"흰 네모 · 가시만 있음" },
+  { id:"or_w1", cat:"or", ok:false, label:"흰 네모 · 가시와 이파리" },
+  { id:"or_w2", cat:"or", ok:false, label:"흰 네모 · 아무것도 없음" },
+  { id:"or_w3", cat:"or", ok:false, label:"파란 네모 · 가시만 있음" },
+  { id:"or_w4", cat:"or", ok:false, label:"흰 동그라미 · 가시만 있음" },
+  { id:"or_w5", cat:"or", ok:false, label:"흰 네모 · 이파리만 있음" }
+];
+var CAT_NAME = { st:"망치 머리", hd:"손잡이", vn:"넝쿨", or:"장신구" };
+
+/* ---------- 말 미션: 단계별 설명 (일기 내용을 말로 옮긴 것) ---------- */
+var SPEECH_STEPS = [
+  "가장 먼저, 푸른색 돌을 찾아라. 여러 돌을 비교했지만 푸른색 돌이 가장 단단하다.",
+  "그 돌을 숲 속에 놓아 이끼가 자랄 때까지 기다려라. 이끼가 돌 틈새를 메워 더 튼튼해진다.",
+  "이끼가 자랐다면, 돌을 뾰족한 모양으로 깎아라. 뾰족하면 뾰족할수록 좋다.",
+  "다음은 손잡이다. 흰색 나무를 찾아라.",
+  "손잡이가 너무 짧으면 불편하니, 길게 깎아야 한다.",
+  "그 다음, 손잡이를 불에 살짝 구워라. 불에 그을리면서 나무가 더 딱딱해진다.",
+  "이제 돌과 손잡이를 엮을 넝쿨이 필요하다. 가시와 이파리가 달린 넝쿨을 구해라.",
+  "넝쿨의 가시는 모두 떼어내라. 이파리만 달린 넝쿨로 머리와 손잡이를 엮어라.",
+  "마지막은 장신구다. 가시가 달린 흰색 열매를 구해 네모 모양으로 깎아라.",
+  "열매의 이파리는 모두 제거해라. 흰색의 가시 달린 네모난 장신구가 가장 좋다."
+];
+
+/* ---------- 그림 미션: 벽화 순서 ---------- */
+var MURAL_CAPTIONS = ["1", "2", "3", "4"];
+
+/* ---------- 문자 미션: 일기 원문 ---------- */
+var DIARY = [
+  { lead:true, t:"나는 드디어 지구 최강의 무기를 발명해냈다. 그 어떤 부족도 이런 무기는 보지 못했을 것이다. 하지만 이것을 만들 줄 아는 사람이 나 뿐이니, 후손들에게 무기 제작 방법을 알려주고자 이 일기를 쓴다." },
+  { t:"가장 먼저, 푸른색 돌을 찾아라. 여러 돌을 비교했지만 푸른색 돌이 가장 단단하다. 그리고 돌을 숲 속에 놓아 이끼가 자랄 때까지 기다려야한다. 이끼는 돌 틈새를 메우며 더 튼튼하게 만든다. 푸른색 돌에 이끼가 자랐다면, 돌을 뾰족한 모양으로 깎아야한다. 뾰족하면 뾰족할수록 좋다." },
+  { t:"다음으로는 손잡이가 필요하다. 흰색 나무를 찾아라. 흰색 나무를 손잡이 모양으로 깎아야 한다. 이때 손잡이가 너무 짧으면 불편하니 길게 깎아야 한다. 그 다음, 손잡이를 불에 살짝 구워라. 불에 그을리면서 나무가 더 딱딱해진다." },
+  { t:"손잡이까지 만들었다면 돌과 손잡이를 엮을 넝쿨이 필요하다. 넝쿨은 가시와 이파리가 달린 넝쿨을 구한 뒤, 가시를 모두 떼어내라. 이파리만 달린 넝쿨로 도끼의 머리와 손잡이를 엮어라." },
+  { t:"마지막으로 장신구를 달아야한다. 쓸데없어 보이지만, 있을때와 없을때의 위력 차이가 크다. 장신구는 가시달린 흰색 열매를 사용한다. 가시가 달린 흰색 열매를 구해 네모 모양으로 깎아라. 이때 열매 이파리는 모두 제거해라. 그냥 흰색의 가시달린 네모난 장신구가 가장 좋다." },
+  { t:"이대로 잘 따라왔다면 너는 최강의 무기를 얻은 것이다. 전사여, 우리 부족을 최강으로 만들어라." }
+];
+
+/* ---------- 어려웠던 점 선택지 ---------- */
+var REFLECT_OPTIONS = [
+  "기억하기가 어려웠어요.",
+  "그림만 보고 알기 어려웠어요.",
+  "자세한 내용을 찾기 어려웠어요.",
+  "다시 확인할 수 있어서 쉬웠어요."
+];
+
+/* ============================================================
+   상태
+   ============================================================ */
+var S = {
+  screen:"intro",
+  name:"", num:"",
+  stepIndex:0,
+  selected:{},          // id -> true
+  startedAt:0,
+  attempt:1,
+  result:null,
+  recordId:null,
+  submitting:false,
+  saveError:null,
+  reflectPicked:{},
+  reflectEtc:"",
+  reflectState:"idle",  // idle | saving | saved | error
+  speaking:false
+};
+
+/* ============================================================
+   저장 계층 — Google Sheet(Apps Script) + 이 기기 보관
+   ============================================================ */
+var Store = {
+  configured:function(){ return !!(CONFIG.SHEET_ENDPOINT && CONFIG.SHEET_ENDPOINT.indexOf("http") === 0); },
+
+  /* JSONP: Canva/학교망의 CORS 제한을 피하기 위한 기본 전송 방식 */
+  jsonp:function(params){
+    return new Promise(function(resolve, reject){
+      var cb = "ugcb_" + Date.now() + "_" + Math.floor(Math.random()*1e6);
+      var timer = setTimeout(function(){ cleanup(); reject(new Error("timeout")); }, 12000);
+      function cleanup(){
+        clearTimeout(timer);
+        try { delete window[cb]; } catch(e){ window[cb] = undefined; }
+        if (s.parentNode) s.parentNode.removeChild(s);
+      }
+      window[cb] = function(data){ cleanup(); resolve(data); };
+      var q = [];
+      for (var k in params){ if (params[k] !== undefined && params[k] !== null) q.push(encodeURIComponent(k)+"="+encodeURIComponent(params[k])); }
+      q.push("callback="+cb);
+      var s = document.createElement("script");
+      s.src = CONFIG.SHEET_ENDPOINT + (CONFIG.SHEET_ENDPOINT.indexOf("?")>=0?"&":"?") + q.join("&");
+      s.onerror = function(){ cleanup(); reject(new Error("network")); };
+      document.head.appendChild(s);
+    });
+  },
+
+  send:function(params){
+    if (!this.configured()) return Promise.reject(new Error("not_configured"));
+    var self = this;
+    return this.jsonp(params).then(function(res){
+      if (!res || res.ok !== true) throw new Error((res && res.error) || "server");
+      return res;
+    }).catch(function(e){
+      /* JSONP가 막힌 환경을 위한 2차 시도 */
+      return fetch(CONFIG.SHEET_ENDPOINT, {
+        method:"POST",
+        headers:{ "Content-Type":"text/plain;charset=utf-8" },
+        body:JSON.stringify(params)
+      }).then(function(r){ return r.json(); }).then(function(res){
+        if (!res || res.ok !== true) throw new Error((res && res.error) || "server");
+        return res;
+      });
+    });
+  },
+
+  local:function(){
+    try { return JSON.parse(localStorage.getItem("ugatustus_records_v1") || "[]"); }
+    catch(e){ return []; }
+  },
+  saveLocal:function(rec){
+    try {
+      var all = this.local(); all.push(rec);
+      localStorage.setItem("ugatustus_records_v1", JSON.stringify(all.slice(-500)));
+    } catch(e){}
+  },
+  patchLocal:function(id, patch){
+    try {
+      var all = this.local();
+      for (var i=0;i<all.length;i++){ if (all[i].기록ID === id){ for (var k in patch) all[i][k] = patch[k]; } }
+      localStorage.setItem("ugatustus_records_v1", JSON.stringify(all));
+    } catch(e){}
+  },
+  attemptNo:function(name, num){
+    var all = this.local(), n = 1;
+    for (var i=0;i<all.length;i++){
+      if (all[i].이름 === name && String(all[i].번호) === String(num) && all[i].미션 === M.name) n++;
+    }
+    return n;
+  },
+  remember:function(name, num){
+    try { localStorage.setItem("ugatustus_student", JSON.stringify({name:name, num:num})); } catch(e){}
+  },
+  recall:function(){
+    try { return JSON.parse(localStorage.getItem("ugatustus_student") || "null"); } catch(e){ return null; }
+  }
+};
+
+/* ============================================================
+   채점
+   ============================================================ */
+function grade(){
+  var right = 0, wrong = 0, per = {};
+  CATEGORIES.forEach(function(c){ per[c.id] = { got:null, ok:false }; });
+  CARDS.forEach(function(c){
+    if (!S.selected[c.id]) return;
+    if (c.ok){ right++; per[c.cat].ok = true; per[c.cat].got = c.id; }
+    else { wrong++; if (!per[c.cat].got) per[c.cat].got = c.id; }
+  });
+  var score = Math.max(0, right*25 - wrong*5);
+  var verdict, vsub, tone;
+  if (score >= 90)      { verdict = "🎉 미션 성공!";                          vsub = "우가투스투스의 돌도끼와 똑같아요!"; tone = "good"; }
+  else if (score >= 70) { verdict = "👍 거의 성공!";                          vsub = "아주 가까워요. 한 가지만 더 살펴볼까요?"; tone = "good"; }
+  else if (score >= 50) { verdict = "🤔 다시 생각해 봐요!";                   vsub = "몇 가지 부품이 조금 달라요."; tone = "warn"; }
+  else                  { verdict = "🔎 우가투스투스의 정보를 다시 확인해 봐요!"; vsub = "괜찮아요. 한 번 더 도전할 수 있어요."; tone = "warn"; }
+  return { score:score, right:right, wrong:wrong, per:per, verdict:verdict, vsub:vsub, tone:tone,
+           success:(score >= 90) };
+}
+
+/* ============================================================
+   그리기 도우미
+   ============================================================ */
+function h(html){ return html; }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(m){
+  return ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[m];
+}); }
+function el(id){ return document.getElementById(id); }
+function fmtTime(sec){
+  var m = Math.floor(sec/60), s = sec%60;
+  return m > 0 ? (m + "분 " + s + "초") : (s + "초");
+}
+
+var CHARACTER = '<svg viewBox="0 0 120 140" width="132" height="154" role="img" aria-label="우가투스투스">'
+ + '<ellipse cx="60" cy="132" rx="34" ry="6" fill="rgba(0,0,0,.18)"/>'
+ + '<path d="M22 58c0-26 17-44 38-44s38 18 38 44c0 8-2 14-5 19H27c-3-5-5-11-5-19z" fill="#3E2C1E"/>'
+ + '<ellipse cx="60" cy="66" rx="31" ry="33" fill="#E2B283"/>'
+ + '<path d="M29 56c4-16 16-26 31-26s27 10 31 26c-8-6-18-9-31-9s-23 3-31 9z" fill="#3E2C1E"/>'
+ + '<circle cx="49" cy="66" r="4.6" fill="#2C2118"/><circle cx="71" cy="66" r="4.6" fill="#2C2118"/>'
+ + '<circle cx="50.6" cy="64.4" r="1.6" fill="#fff"/><circle cx="72.6" cy="64.4" r="1.6" fill="#fff"/>'
+ + '<path d="M50 80c4 5 16 5 20 0" stroke="#2C2118" stroke-width="3.4" fill="none" stroke-linecap="round"/>'
+ + '<ellipse cx="38" cy="74" rx="5" ry="3.4" fill="#E08A6A" opacity=".55"/>'
+ + '<ellipse cx="82" cy="74" rx="5" ry="3.4" fill="#E08A6A" opacity=".55"/>'
+ + '<path d="M60 47c-3 0-5 2-5 4s2 3 5 3 5-1 5-3-2-4-5-4z" fill="#F2F0EA"/>'
+ + '<path d="M36 100c6-6 15-9 24-9s18 3 24 9l5 30H31z" fill="#B08155"/>'
+ + '<path d="M31 130h58l-3-8c-9 4-43 4-52 0z" fill="#8C6440"/>'
+ + '<path d="M44 104l7 9-7 9M76 104l-7 9 7 9" stroke="#8C6440" stroke-width="3" fill="none" stroke-linecap="round"/>'
+ + '</svg>';
+
+function topbar(stageLabel, pips, activePip){
+  var out = '<div class="topbar">'
+    + '<span class="badge">' + M.emoji + ' ' + M.name + ' 미션</span>';
+  if (S.name) out += '<span class="who">' + esc(S.name) + (S.num ? ' · ' + esc(S.num) + '번' : '') + '</span>';
+  out += '</div>';
+  if (pips){
+    out += '<div class="stage-label">' + esc(stageLabel) + '</div><div class="steps">';
+    for (var i=0;i<pips;i++) out += '<span class="pip' + (i <= activePip ? ' on' : '') + '"></span>';
+    out += '</div>';
+  }
+  return out;
+}
+
+function render(){
+  document.documentElement.style.setProperty("--accent", M.accent);
+  document.documentElement.style.setProperty("--accent-dark", M.dark);
+  document.documentElement.style.setProperty("--accent-soft", M.soft);
+  document.title = "우가투스투스의 비밀 미션 — " + M.name + " 미션";
+  var v = { intro:viewIntro, info:viewInfo, select:viewSelect, result:viewResult }[S.screen];
+  el("app").innerHTML = v();
+  window.scrollTo(0, 0);
+  if (S.screen === "info" && MISSION_ID === "speech" && S.stepIndex < SPEECH_STEPS.length){
+    speak(SPEECH_STEPS[S.stepIndex]);
+  }
+}
+
+/* ---------- 화면 1 : 이름 입력 ---------- */
+function viewIntro(){
+  var saved = Store.recall();
+  var warn = Store.configured() ? "" :
+    '<div class="notice warn">⚠️ 결과 저장 주소가 아직 연결되지 않았습니다. 지금은 결과가 <b>이 기기에만</b> 저장되고 선생님 결과판에는 모이지 않습니다.</div>';
+  return topbar("", 0, 0)
+  + '<div class="panel">'
+  +   warn
+  +   '<div class="hero">'
+  +     '<div class="art">' + CHARACTER + '</div>'
+  +     '<div class="say">'
+  +       '<h1>우가투스투스의 비밀 미션</h1>'
+  +       '<p class="sub">' + M.emoji + ' ' + esc(M.title) + '</p>'
+  +       '<div class="bubble">나는 우가우가 우가투스투스야!</div>'
+  +       '<div class="bubble">내가 만든 최강의 무기, <b>돌도끼</b> 만드는 방법을 너에게 알려줄게.</div>'
+  +       '<div class="bubble">과연 너는 내가 알려준 내용을 정확하게 기억할 수 있을까?</div>'
+  +     '</div>'
+  +   '</div>'
+  +   '<form id="f" autocomplete="off">'
+  +     '<label for="nm">학생 이름</label>'
+  +     '<input type="text" id="nm" inputmode="text" maxlength="20" placeholder="이름을 쓰세요" value="' + esc(saved ? saved.name : "") + '">'
+  +     '<label for="no">학생 번호</label>'
+  +     '<input type="number" id="no" inputmode="numeric" min="1" max="99" placeholder="번호를 쓰세요" value="' + esc(saved ? saved.num : "") + '">'
+  +     '<div class="err" id="er"></div>'
+  +     '<button class="btn" type="submit">미션 시작하기</button>'
+  +   '</form>'
+  + '</div>'
+  + '<p class="foot">' + (CONFIG.CLASS_LABEL ? esc(CONFIG.CLASS_LABEL) + ' · ' : '') + '이름과 번호만 사용하고, 다른 개인정보는 모으지 않아요.</p>';
+}
+
+/* ---------- 화면 2 : 정보 전달 ---------- */
+function viewInfo(){
+  if (MISSION_ID === "speech")  return viewInfoSpeech();
+  if (MISSION_ID === "picture") return viewInfoPicture();
+  return viewInfoText();
+}
+
+function viewInfoSpeech(){
+  var last = S.stepIndex >= SPEECH_STEPS.length;
+  var body;
+  if (!last){
+    /* 말 미션은 '들어서 기억하기'가 핵심이므로 설명을 글자로 보여 주지 않습니다. */
+    var bars = '';
+    for (var b = 0; b < 7; b++) bars += '<i></i>';
+    body = '<div class="hero">'
+      +   '<div class="art">' + CHARACTER + '</div>'
+      +   '<div class="say">'
+      +     '<div class="listen">'
+      +       '<p class="cap">우가투스투스가 말하고 있어요</p>'
+      +       '<p class="nth">' + (S.stepIndex + 1) + '번째 이야기</p>'
+      +       '<div class="wave' + (S.speaking ? ' on' : '') + '" id="wave" aria-hidden="true">' + bars + '</div>'
+      +       '<p class="state" id="sstate">' + (S.speaking ? '잘 들어 보세요…' : '') + '</p>'
+      +     '</div>'
+      +     '<div class="btnrow">'
+      +       '<button class="btn ghost" id="again">🔊 한 번 더 듣기</button>'
+      +       '<button class="btn" id="next">' + (S.stepIndex === SPEECH_STEPS.length-1 ? "설명 끝내기" : "다음") + '</button>'
+      +     '</div>'
+      +   '</div>'
+      + '</div>';
+    if (!ttsSupported()){
+      body += '<div class="notice bad" style="margin:16px 0 0">'
+           +    '이 기기에서는 소리를 낼 수 없어요. <b>선생님께 말씀드리세요.</b>'
+           +  '</div>'
+           +  '<button class="btn ghost" id="teacherRead" style="margin-top:10px">🧑‍🏫 선생님이 읽어 주기</button>';
+    }
+  } else {
+    body = '<div class="center">'
+      + '<div class="art" style="margin:0 auto 6px">' + CHARACTER + '</div>'
+      + '<h2>이제 들었던 내용을 기억해서<br>무기를 완성해 보세요!</h2>'
+      + '<p class="sub">재료를 고르는 동안에는 설명을 다시 들을 수 없어요.</p>'
+      + '<button class="btn" id="go">재료 고르러 가기</button>'
+      + '</div>';
+  }
+  return topbar("설명 듣기", SPEECH_STEPS.length, S.stepIndex)
+    + '<div class="panel">' + body + '</div>'
+    + '<p class="foot">소리가 안 들리면 태블릿의 소리를 켜고 [🔊 한 번 더 듣기]를 눌러 보세요.<br>지나간 이야기는 다시 들을 수 없어요.</p>';
+}
+
+function viewInfoPicture(){
+  var last = S.stepIndex >= MURALS.length;
+  var body;
+  if (!last){
+    body = '<h2>' + (S.stepIndex+1) + ' / ' + MURALS.length + '</h2>'
+      + '<img class="mural" id="mu" src="' + MURALS[S.stepIndex] + '" alt="우가투스투스가 남긴 벽화 ' + (S.stepIndex+1) + '번">'
+      + '<p class="muralcap">그림을 누르면 크게 볼 수 있어요.</p>'
+      + '<div class="btnrow"><button class="btn" id="next">' + (S.stepIndex === MURALS.length-1 ? "그림 다 봤어요" : "다음 그림") + '</button></div>';
+  } else {
+    body = '<div class="center">'
+      + '<div class="art" style="margin:0 auto 6px">' + CHARACTER + '</div>'
+      + '<h2>이제 본 그림을 기억해서<br>무기를 완성해 보세요!</h2>'
+      + '<p class="sub">재료를 고르는 동안에는 벽화를 다시 볼 수 없어요.</p>'
+      + '<button class="btn" id="go">재료 고르러 가기</button>'
+      + '</div>';
+  }
+  return topbar("벽화 보기", MURALS.length, S.stepIndex)
+    + '<div class="panel">' + body + '</div>'
+    + '<p class="foot">벽화에는 우리말 설명이 없어요. 그림만 보고 알아내야 해요.</p>';
+}
+
+function viewInfoText(){
+  return topbar("일기 읽기", 1, 0)
+    + '<div class="panel">'
+    +   '<h2>📖 우가투스투스의 일기</h2>'
+    +   '<p class="sub">천천히 읽어 보세요. 이 일기는 나중에도 다시 읽을 수 있어요.</p>'
+    +   diaryHTML()
+    +   '<div class="btnrow"><button class="btn" id="go">재료 고르러 가기</button></div>'
+    + '</div>'
+    + '<p class="foot">재료를 고르는 동안에도 [📖 일기 다시 읽기] 버튼으로 언제든 확인할 수 있어요.</p>';
+}
+
+function diaryHTML(){
+  var out = '<div class="diary">';
+  DIARY.forEach(function(p){ out += '<p' + (p.lead ? ' class="lead"' : '') + '>' + esc(p.t) + '</p>'; });
+  return out + '</div>';
+}
+
+/* ---------- 화면 3 : 재료 선택 ---------- */
+function viewSelect(){
+  var n = Object.keys(S.selected).length;
+  var out = topbar("재료 고르기", 1, 0)
+    + '<div class="panel">'
+    + '<h2>🪓 우가투스투스의 무기를 완성하라!</h2>'
+    + '<p class="sub">알맞은 재료를 눌러서 고르세요. 한 번 더 누르면 선택이 취소돼요.</p>';
+
+  if (S.saveError){
+    out += '<div class="notice bad">❗ ' + esc(S.saveError) + '</div>';
+  }
+
+  CATEGORIES.forEach(function(cat){
+    out += '<div class="cat"><h3>' + esc(cat.name) + '</h3><p class="chint">' + esc(cat.hint) + '</p>'
+        +  '<div class="grid' + (cat.wide ? ' wide' : '') + '">';
+    CARDS.filter(function(c){ return c.cat === cat.id; }).forEach(function(c){
+      out += '<div class="card' + (S.selected[c.id] ? ' sel' : '') + '" data-id="' + c.id + '" role="button" tabindex="0" aria-pressed="' + (S.selected[c.id]?'true':'false') + '">'
+          +    '<span class="tick">✓</span>'
+          +    '<img src="' + IMG[c.id] + '" alt="' + esc(c.label) + '">'
+          +    '<div class="cl">' + esc(c.label) + '</div>'
+          +  '</div>';
+    });
+    out += '</div></div>';
+  });
+
+  out += '<div class="picked">'
+      +    '<div class="pickcount">고른 재료 <b id="cnt">' + n + '</b>개</div>'
+      +    '<div class="btnrow">'
+      +      (MISSION_ID === "text" ? '<button class="btn ghost" id="reread">📖 일기 다시 읽기</button>' : '')
+      +      '<button class="btn" id="submit"' + (S.submitting ? ' disabled' : '') + '>'
+      +        (S.submitting ? '<span class="spinner"></span> 결과 저장 중…' : '제출하기')
+      +      '</button>'
+      +    '</div>'
+      +  '</div>'
+      + '</div>';
+  return out;
+}
+
+/* ---------- 화면 4 : 결과 ---------- */
+function viewResult(){
+  var r = S.result;
+  var out = topbar("나의 결과", 0, 0) + '<div class="panel">'
+    + '<h2 class="center">⭐ 나의 미션 결과 ⭐</h2>'
+    + '<div class="score pop">' + r.score + '<small>점</small></div>'
+    + '<div class="verdict">' + r.verdict + '</div>'
+    + '<p class="vsub">' + esc(r.vsub) + '</p>';
+
+  out += '<ul class="rlist">';
+  CATEGORIES.forEach(function(cat){
+    var p = r.per[cat.id];
+    var picked = p.got ? CARDS.filter(function(c){ return c.id === p.got; })[0] : null;
+    if (p.ok){
+      out += '<li><span class="mk">✅</span><span>' + esc(cat.name) + '</span><span class="sm">맞았어요</span></li>';
+    } else if (picked){
+      out += '<li class="no"><span class="mk">❌</span><span>' + esc(cat.name) + '</span><span class="sm">' + esc(picked.label) + '</span></li>';
+    } else {
+      out += '<li class="no"><span class="mk">⬜</span><span>' + esc(cat.name) + '</span><span class="sm">고르지 않았어요</span></li>';
+    }
+  });
+  out += '</ul>';
+
+  var extras = CARDS.filter(function(c){ return S.selected[c.id] && !c.ok; });
+  if (extras.length){
+    out += '<p class="sub" style="margin:14px 0 6px"><b>잘못 고른 재료</b> (한 개마다 5점씩 깎여요)</p><ul class="rlist">';
+    extras.forEach(function(c){
+      out += '<li class="no"><span class="mk">❌</span><span>' + esc(c.label) + '</span><span class="sm">' + esc(CAT_NAME[c.cat]) + '</span></li>';
+    });
+    out += '</ul>';
+  }
+
+  out += '<p class="vsub" style="margin-top:14px">맞은 재료 ' + r.right + '개 · 잘못 고른 재료 ' + r.wrong + '개 · 걸린 시간 ' + fmtTime(r.seconds) + ' · ' + S.attempt + '번째 도전</p>';
+
+  out += '<div class="divider"></div>';
+  out += '<h2>이번 미션에서 가장 어려웠던 점은 무엇이었나요?</h2>'
+      +  '<p class="sub">여러 개를 골라도 괜찮아요.</p>';
+  REFLECT_OPTIONS.forEach(function(o, i){
+    out += '<label class="opt' + (S.reflectPicked[o] ? ' on' : '') + '" data-opt="' + i + '">'
+        +    '<input type="checkbox" ' + (S.reflectPicked[o] ? 'checked' : '') + '>'
+        +    '<span>' + esc(o) + '</span>'
+        +  '</label>';
+  });
+  out += '<label class="opt' + (S.reflectPicked["기타"] ? ' on' : '') + '" data-opt="etc">'
+      +    '<input type="checkbox" ' + (S.reflectPicked["기타"] ? 'checked' : '') + '>'
+      +    '<span>기타</span>'
+      +  '</label>';
+  if (S.reflectPicked["기타"]){
+    out += '<input type="text" id="etc" maxlength="60" placeholder="어떤 점이 어려웠나요?" value="' + esc(S.reflectEtc) + '" style="margin-top:4px">';
+  }
+
+  if (S.reflectState === "saved") out += '<div class="notice good" style="margin-top:14px">✅ 잘 보냈어요. 고마워요!</div>';
+  if (S.reflectState === "error") out += '<div class="notice bad" style="margin-top:14px">저장하지 못했어요. 인터넷 연결을 확인한 뒤 다시 눌러 주세요.</div>';
+
+  out += '<div class="btnrow">'
+      +    '<button class="btn" id="sendReflect"' + (S.reflectState === "saving" ? ' disabled' : '') + '>'
+      +      (S.reflectState === "saving" ? '<span class="spinner"></span> 보내는 중…' : (S.reflectState === "saved" ? '다시 보내기' : '선생님께 보내기'))
+      +    '</button>'
+      +    '<button class="btn ghost" id="retry">🔁 다시 도전하기</button>'
+      +  '</div>';
+
+  out += '</div>';
+  out += '<p class="foot">우리는 지금 <b>문자가 필요한 까닭</b>을 알아보기 위한 첫 번째 미션을 해결했습니다.<br>이제 교과서와 함께 문자가 우리 생활에서 왜 필요한지 알아봅시다.</p>';
+  return out;
+}
+
+/* ============================================================
+   음성 (말 미션)
+   ============================================================ */
+function ttsSupported(){
+  return typeof window !== "undefined" && "speechSynthesis" in window
+      && typeof SpeechSynthesisUtterance !== "undefined";
+}
+function koVoice(){
+  try {
+    var vs = window.speechSynthesis.getVoices() || [];
+    for (var i=0;i<vs.length;i++){ if ((vs[i].lang||"").toLowerCase().indexOf("ko") === 0) return vs[i]; }
+  } catch(e){}
+  return null;
+}
+function setSpeaking(on){
+  S.speaking = on;
+  var w = el("wave"), st = el("sstate");
+  if (w) w.classList.toggle("on", on);
+  if (st) st.textContent = on ? "잘 들어 보세요…" : "다 들었어요";
+}
+function speak(text){
+  if (!ttsSupported()) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = "ko-KR"; u.rate = 0.95; u.pitch = 0.9;
+    var v = koVoice(); if (v) u.voice = v;
+    u.onstart = function(){ setSpeaking(true); };
+    u.onend   = function(){ setSpeaking(false); };
+    u.onerror = function(){ setSpeaking(false); };
+    setSpeaking(true);
+    window.speechSynthesis.speak(u);
+  } catch(e){ setSpeaking(false); }
+}
+function stopSpeak(){
+  try { window.speechSynthesis.cancel(); } catch(e){}
+  S.speaking = false;
+}
+
+/* ============================================================
+   동작
+   ============================================================ */
+document.addEventListener("submit", function(e){
+  if (e.target.id !== "f") return;
+  e.preventDefault();
+  var nm = el("nm").value.trim(), no = el("no").value.trim();
+  if (!nm){ el("er").textContent = "이름을 먼저 써 주세요."; el("nm").focus(); return; }
+  if (!no){ el("er").textContent = "번호를 먼저 써 주세요."; el("no").focus(); return; }
+  S.name = nm; S.num = no;
+  Store.remember(nm, no);
+  S.attempt = Store.attemptNo(nm, no);
+  S.startedAt = Date.now();
+  S.stepIndex = 0;
+  S.screen = "info";
+  render();
+});
+
+document.addEventListener("click", function(e){
+  var t = e.target;
+
+  if (t.closest && t.closest("#again")){ speak(SPEECH_STEPS[S.stepIndex]); return; }
+
+  if (t.closest && t.closest("#teacherRead")){
+    /* 기기에서 소리가 나지 않을 때만 나타나는 선생님용 보조 기능입니다. */
+    openModal('<h2>🧑‍🏫 선생님이 읽어 주세요</h2>'
+      + '<p class="sub">이 기기에서 소리가 나지 않습니다. 아래 문장을 학생에게 읽어 주세요.</p>'
+      + '<div class="diary"><p>' + esc(SPEECH_STEPS[S.stepIndex]) + '</p></div>');
+    return;
+  }
+
+  if (t.closest && t.closest("#next")){
+    stopSpeak();
+    S.stepIndex++;
+    render();
+    return;
+  }
+
+  if (t.closest && t.closest("#go")){
+    stopSpeak();
+    S.screen = "select";
+    render();
+    return;
+  }
+
+  if (t.closest && t.closest("#mu")){
+    openModal('<img src="' + MURALS[S.stepIndex] + '" alt="벽화 크게 보기">');
+    return;
+  }
+
+  if (t.closest && t.closest("#reread")){
+    openModal('<h2>📖 우가투스투스의 일기</h2>' + diaryHTML());
+    return;
+  }
+
+  if (t.id === "mclose" || t.id === "mback"){ closeModal(); return; }
+
+  var card = t.closest && t.closest(".card");
+  if (card){
+    var id = card.getAttribute("data-id");
+    if (S.selected[id]) delete S.selected[id]; else S.selected[id] = true;
+    card.classList.toggle("sel");
+    card.setAttribute("aria-pressed", S.selected[id] ? "true" : "false");
+    if (el("cnt")) el("cnt").textContent = Object.keys(S.selected).length;
+    return;
+  }
+
+  if (t.closest && t.closest("#submit")){ submit(); return; }
+
+  var opt = t.closest && t.closest(".opt");
+  if (opt && S.screen === "result"){
+    var key = opt.getAttribute("data-opt");
+    var label = (key === "etc") ? "기타" : REFLECT_OPTIONS[Number(key)];
+    if (S.reflectPicked[label]) delete S.reflectPicked[label]; else S.reflectPicked[label] = true;
+    if (S.reflectState === "saved" || S.reflectState === "error") S.reflectState = "idle";
+    var v = el("etc") ? el("etc").value : S.reflectEtc;
+    S.reflectEtc = v;
+    render();
+    return;
+  }
+
+  if (t.closest && t.closest("#sendReflect")){ sendReflect(); return; }
+
+  if (t.closest && t.closest("#retry")){
+    S.selected = {}; S.result = null; S.recordId = null; S.saveError = null;
+    S.reflectPicked = {}; S.reflectEtc = ""; S.reflectState = "idle";
+    S.attempt = Store.attemptNo(S.name, S.num);
+    S.stepIndex = 0; S.startedAt = Date.now(); S.screen = "info";
+    render();
+    return;
+  }
+});
+
+document.addEventListener("keydown", function(e){
+  if (e.key === "Escape") closeModal();
+  if ((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("card")){
+    e.preventDefault(); e.target.click();
+  }
+});
+document.addEventListener("input", function(e){
+  if (e.target.id === "etc") S.reflectEtc = e.target.value;
+});
+
+function openModal(inner){
+  var d = document.createElement("div");
+  d.className = "modal"; d.id = "modal";
+  d.innerHTML = '<div class="inner">' + inner
+    + '<div class="btnrow"><button class="btn" id="mclose">닫기</button></div></div>';
+  d.addEventListener("click", function(ev){ if (ev.target === d) closeModal(); });
+  document.body.appendChild(d);
+}
+function closeModal(){ var m = el("modal"); if (m) m.remove(); }
+
+/* ---------- 제출 ---------- */
+function submit(){
+  if (S.submitting) return;                       // 중복 클릭 방지
+  var picked = Object.keys(S.selected);
+  if (picked.length === 0){
+    S.saveError = "재료를 하나 이상 골라야 제출할 수 있어요.";
+    render();
+    return;
+  }
+  S.submitting = true; S.saveError = null;
+  render();
+
+  var r = grade();
+  r.seconds = Math.max(1, Math.round((Date.now() - S.startedAt)/1000));
+  var id = "r" + Date.now() + "_" + Math.floor(Math.random()*100000);
+  var rec = {
+    기록ID: id,
+    제출일시: new Date().toISOString(),
+    이름: S.name, 번호: S.num, 미션: M.name,
+    점수: r.score,
+    성공여부: r.success ? "성공" : "미완성",
+    정답개수: r.right, 오답개수: r.wrong,
+    "소요시간(초)": r.seconds,
+    시도: S.attempt,
+    선택한답: picked.map(function(p){
+      var c = CARDS.filter(function(x){ return x.id === p; })[0];
+      return CAT_NAME[c.cat] + ":" + c.label;
+    }).join(" / "),
+    어려웠던점: ""
+  };
+
+  var payload = { action:"submit" };
+  for (var k in rec) payload[k] = rec[k];
+
+  function done(){
+    Store.saveLocal(rec);
+    S.recordId = id;
+    S.result = r;
+    S.submitting = false;
+    S.saveError = null;
+    S.screen = "result";
+    render();
+    if (r.success) confetti();
+  }
+
+  if (!Store.configured()){
+    // 저장 주소가 없을 때: 이 기기에만 저장하고, 첫 화면에서 이미 안내했습니다.
+    setTimeout(done, 350);
+    return;
+  }
+
+  Store.send(payload).then(function(){
+    done();
+  }).catch(function(){
+    S.submitting = false;
+    S.saveError = "결과를 저장하는 중 문제가 발생했습니다. 인터넷 연결을 확인한 후 다시 제출해 주세요.";
+    render();
+    var b = el("submit"); if (b) b.scrollIntoView({behavior:"smooth", block:"center"});
+  });
+}
+
+/* ---------- 어려웠던 점 보내기 ---------- */
+function sendReflect(){
+  if (S.reflectState === "saving") return;
+  var picks = Object.keys(S.reflectPicked);
+  if (!picks.length){
+    S.reflectState = "error";
+    render();
+    return;
+  }
+  var text = picks.map(function(p){
+    return (p === "기타" && S.reflectEtc) ? ("기타: " + S.reflectEtc) : p;
+  }).join(" / ");
+
+  S.reflectState = "saving"; render();
+  Store.patchLocal(S.recordId, { 어려웠던점: text });
+
+  if (!Store.configured()){
+    setTimeout(function(){ S.reflectState = "saved"; render(); }, 300);
+    return;
+  }
+  Store.send({ action:"reflect", 기록ID:S.recordId, 어려웠던점:text }).then(function(){
+    S.reflectState = "saved"; render();
+  }).catch(function(){
+    S.reflectState = "error"; render();
+  });
+}
+
+/* ---------- 성공 효과 ---------- */
+function confetti(){
+  var box = document.createElement("div");
+  box.className = "confetti";
+  var colors = [M.accent, "#F2C14E", "#8FBF6A", "#fff", "#E07A5F"];
+  for (var i=0;i<60;i++){
+    var p = document.createElement("i");
+    p.style.left = Math.random()*100 + "vw";
+    p.style.top = (-10 - Math.random()*30) + "vh";
+    p.style.background = colors[i % colors.length];
+    p.style.animationDuration = (1.8 + Math.random()*1.6) + "s";
+    p.style.animationDelay = (Math.random()*0.5) + "s";
+    box.appendChild(p);
+  }
+  document.body.appendChild(box);
+  setTimeout(function(){ box.remove(); }, 4200);
+}
+
+render();
+</script>
+</body>
+</html>

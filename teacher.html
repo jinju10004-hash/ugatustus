@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>우가투스투스 미션 교사용 결과판</title>
+<style>
+  :root{
+    --speech:#E2761B; --picture:#3E8E4E; --text:#2F6FD0;
+    --bg:#F4EFE4; --panel:#FFFFFF; --ink:#241C14; --soft:#6C5C48; --line:#DED2BC;
+    --ok:#2E7D4F; --bad:#C0392B;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;
+    background:var(--bg); color:var(--ink); font-size:16px; line-height:1.6;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:18px 16px 60px}
+  header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  h1{font-size:26px;margin:0;letter-spacing:-.02em}
+  .muted{color:var(--soft);font-size:14px;margin:0}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:16px}
+  h2{font-size:20px;margin:0 0 4px}
+  h3{font-size:17px;margin:0 0 8px}
+  .sect-sub{color:var(--soft);font-size:14px;margin:0 0 14px}
+
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  input[type=text]{
+    flex:1 1 280px;min-width:0;padding:12px 14px;font-size:15px;border:1px solid var(--line);
+    border-radius:10px;font-family:inherit;background:#fff;color:var(--ink)
+  }
+  input:focus{outline:2px solid var(--text);outline-offset:1px}
+  button{
+    font-family:inherit;font-size:15px;font-weight:700;padding:12px 18px;border-radius:10px;
+    border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;min-height:46px
+  }
+  button.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+  button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  button:disabled{opacity:.55;cursor:progress}
+
+  .tiles{display:grid;gap:12px;grid-template-columns:repeat(2,1fr)}
+  @media(min-width:760px){ .tiles{grid-template-columns:repeat(4,1fr)} }
+  .tile{background:#FBF7EF;border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center}
+  .tile .n{font-size:34px;font-weight:900;line-height:1.1;letter-spacing:-.02em}
+  .tile .k{font-size:13px;color:var(--soft);font-weight:700;margin-top:4px}
+
+  .cmp{display:grid;gap:14px;grid-template-columns:1fr}
+  @media(min-width:720px){ .cmp{grid-template-columns:repeat(3,1fr)} }
+  .mcard{border-radius:18px;padding:22px;color:#fff;text-align:center}
+  .mcard.speech{background:linear-gradient(160deg,#EE8A34,#C25E0D)}
+  .mcard.picture{background:linear-gradient(160deg,#4FA560,#276234)}
+  .mcard.text{background:linear-gradient(160deg,#4283DE,#1D4A90)}
+  .mcard .em{font-size:38px;line-height:1}
+  .mcard .nm{font-size:20px;font-weight:800;margin-top:4px}
+  .mcard .avg{font-size:52px;font-weight:900;letter-spacing:-.03em;line-height:1.05;margin-top:10px}
+  .mcard .avg small{font-size:22px}
+  .mcard .meta{font-size:14px;opacity:.92;margin-top:8px;line-height:1.5}
+  .mcard .none{font-size:18px;font-weight:700;margin-top:18px;opacity:.95}
+  .bars{margin-top:16px}
+  .bar{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .bar .lb{flex:0 0 74px;font-weight:700;font-size:14px}
+  .bar .tr{flex:1;height:22px;background:#EDE5D6;border-radius:99px;overflow:hidden;display:block}
+  .bar .fl{display:block;height:100%;border-radius:99px;transition:width .4s}
+  .bar .vl{flex:0 0 58px;text-align:right;font-weight:800;font-size:14px}
+
+  table{width:100%;border-collapse:collapse;font-size:15px}
+  .tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  th,td{padding:10px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+  th{font-size:13px;color:var(--soft);cursor:pointer;user-select:none;background:#FBF7EF;position:sticky;top:0}
+  th.num,td.num{text-align:right}
+  tbody tr:hover{background:#FBF7EF}
+  .pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:800;color:#fff}
+  .pill.speech{background:var(--speech)} .pill.picture{background:var(--picture)} .pill.text{background:var(--text)}
+  .yes{color:var(--ok);font-weight:800} .no{color:var(--soft)}
+
+  .empty{padding:34px 16px;text-align:center;color:var(--soft);font-size:17px;font-weight:700}
+  .notice{border-radius:12px;padding:14px 16px;font-size:14.5px;font-weight:600;margin-bottom:14px;line-height:1.6}
+  .notice.warn{background:#FFF3CD;border:1px solid #E6C34A;color:#6B4E00}
+  .notice.bad{background:#FBE3E0;border:1px solid #E3A49C;color:#8A2317}
+  .notice.good{background:#E4F3E9;border:1px solid #9CCBAE;color:#1E5C38}
+
+  .qs{display:grid;gap:12px;grid-template-columns:1fr}
+  @media(min-width:760px){ .qs{grid-template-columns:repeat(2,1fr)} }
+  .q{background:#FBF7EF;border:2px solid var(--line);border-radius:16px;padding:20px;font-size:21px;font-weight:800;line-height:1.45}
+  .q.big{grid-column:1/-1;background:var(--ink);color:#fff;border-color:var(--ink);font-size:26px;text-align:center}
+
+  .links{display:grid;gap:14px;grid-template-columns:1fr}
+  @media(min-width:760px){ .links{grid-template-columns:repeat(2,1fr)} }
+  .lk{border:1px solid var(--line);border-radius:14px;padding:16px;background:#FBF7EF}
+  .lk h4{margin:0 0 8px;font-size:17px}
+  .lk .qr{width:132px;height:132px;background:#fff;border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-top:12px;padding:6px}
+  .lk .qr svg{width:100%;height:100%;display:block}
+  .lk .qrnote{font-size:12px;color:var(--soft);text-align:center;padding:8px}
+  .reasons li{margin-bottom:7px}
+  .reasons .rb{display:flex;align-items:center;gap:10px}
+  .reasons .rb .tr{flex:1;height:16px;background:#EDE5D6;border-radius:99px;overflow:hidden;display:block}
+  .reasons .rb .fl{display:block;height:100%;background:var(--soft);border-radius:99px}
+  ul.plain{list-style:none;padding:0;margin:0;font-size:15px}
+  .foot{color:var(--soft);font-size:13px;text-align:center;margin-top:24px;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>👩‍🏫 우가투스투스 미션 교사용 결과판</h1>
+    <p class="muted" id="stamp" style="margin-left:auto"></p>
+  </header>
+  <p class="muted">학생들이 제출한 <b>실제 결과</b>만 보여 줍니다. 제출이 없으면 숫자를 지어내지 않고 “데이터 없음”으로 표시합니다.</p>
+
+  <!-- 연결 -->
+  <section class="panel">
+    <h2>결과 저장소 연결</h2>
+    <p class="sect-sub">학생용 웹앱에 넣은 것과 <b>똑같은</b> Google Apps Script 웹앱 주소를 넣어 주세요.</p>
+    <div class="row">
+      <input type="text" id="ep" placeholder="https://script.google.com/macros/s/...../exec">
+      <button class="primary" id="connect">연결하고 불러오기</button>
+      <button id="refresh">새로고침</button>
+      <button id="auto">자동 새로고침 끔</button>
+    </div>
+    <div id="connstate" style="margin-top:12px"></div>
+  </section>
+
+  <!-- 학급 전체 -->
+  <section class="panel">
+    <h2>학급 전체</h2>
+    <p class="sect-sub">
+      집계 기준:
+      <button class="basis on" data-basis="best">최고 점수</button>
+      <button class="basis" data-basis="first">첫 시도</button>
+      <button class="basis" data-basis="last">마지막 시도</button>
+    </p>
+    <div id="overall"></div>
+  </section>
+
+  <!-- 비교 화면 -->
+  <section class="panel">
+    <h2>세 가지 전달 방법, 결과가 어떻게 달랐을까?</h2>
+    <p class="sect-sub">전자칠판으로 학생들과 함께 보세요.</p>
+    <div id="compare"></div>
+  </section>
+
+  <!-- 어려웠던 점 -->
+  <section class="panel">
+    <h2>학생들이 고른 “어려웠던 점”</h2>
+    <p class="sect-sub">학생이 직접 고른 내용입니다.</p>
+    <div id="reasons"></div>
+  </section>
+
+  <!-- 학생별 -->
+  <section class="panel">
+    <h2>학생별 결과</h2>
+    <p class="sect-sub">
+      미션:
+      <button class="filt on" data-f="all">전체</button>
+      <button class="filt" data-f="말">🗣️ 말</button>
+      <button class="filt" data-f="그림">🎨 그림</button>
+      <button class="filt" data-f="문자">📖 문자</button>
+      &nbsp;· 제목을 누르면 정렬됩니다.
+    </p>
+    <div id="table"></div>
+  </section>
+
+  <!-- 질문 -->
+  <section class="panel">
+    <h2>수업 질문</h2>
+    <p class="sect-sub">답을 먼저 알려 주지 말고, 학생들의 경험에서 끌어내세요.</p>
+    <div class="qs">
+      <div class="q">왜 같은 무기 만들기 미션인데<br>점수가 달랐을까요?</div>
+      <div class="q">말로 전달받을 때는<br>무엇이 어려웠나요?</div>
+      <div class="q">그림으로 전달받을 때는<br>무엇이 어려웠나요?</div>
+      <div class="q">문자로 전달받을 때는<br>무엇이 편했나요?</div>
+      <div class="q big">문자가 필요한 까닭은 무엇일까요?</div>
+    </div>
+    <p class="muted" style="margin-top:18px;font-size:15px;line-height:1.8">
+      “우리는 지금 문자가 필요한 까닭을 알아보기 위한 첫 번째 미션을 해결했습니다.”<br>
+      “이제 교과서와 함께 문자가 우리 생활에서 왜 필요한지 알아봅시다.”
+    </p>
+  </section>
+
+  <!-- 링크 배포 -->
+  <section class="panel">
+    <h2>학생 배포용 링크</h2>
+    <p class="sect-sub">게시한 주소를 넣으면 이 기기에 저장되고 QR 코드가 만들어집니다.</p>
+    <div class="links" id="links"></div>
+  </section>
+
+  <p class="foot">
+    학생의 이름과 번호 외의 개인정보는 수집하지 않습니다.<br>
+    수업이 끝나면 Google Sheet의 응답 시트를 정리해 주세요.
+  </p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+/* ============================================================
+   우가투스투스 미션 — 교사용 결과판
+   ============================================================ */
+var LS = {
+  ep:"ugatustus_teacher_endpoint",
+  links:"ugatustus_links",
+  records:"ugatustus_records_v1"
+};
+var MISSION_KEYS = { "말":"speech", "그림":"picture", "문자":"text" };
+var MISSION_EMOJI = { "말":"🗣️", "그림":"🎨", "문자":"📖" };
+var REASON_LABELS = [
+  "기억하기가 어려웠어요.",
+  "그림만 보고 알기 어려웠어요.",
+  "자세한 내용을 찾기 어려웠어요.",
+  "다시 확인할 수 있어서 쉬웠어요.",
+  "기타"
+];
+
+var ST = {
+  endpoint: lsGet(LS.ep, ""),
+  rows: null,            // null = 아직 불러오지 않음
+  source: "none",        // none | sheet | local
+  loading: false,
+  error: null,
+  basis: "best",
+  filter: "all",
+  sortKey: "점수",
+  sortDir: -1,
+  autoTimer: null
+};
+
+function lsGet(k, d){ try { var v = localStorage.getItem(k); return v === null ? d : v; } catch(e){ return d; } }
+function lsSet(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(m){
+  return ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[m]; }); }
+function fmtTime(sec){ sec = Number(sec)||0; var m = Math.floor(sec/60), s = sec%60; return m ? (m+"분 "+s+"초") : (s+"초"); }
+function num(v){ var n = Number(v); return isFinite(n) ? n : 0; }
+
+/* ---------------- 데이터 불러오기 ---------------- */
+function jsonp(url, params){
+  return new Promise(function(resolve, reject){
+    var cb = "tcb_" + Date.now() + "_" + Math.floor(Math.random()*1e6);
+    var timer = setTimeout(function(){ cleanup(); reject(new Error("timeout")); }, 15000);
+    function cleanup(){
+      clearTimeout(timer);
+      try { delete window[cb]; } catch(e){ window[cb] = undefined; }
+      if (s.parentNode) s.parentNode.removeChild(s);
+    }
+    window[cb] = function(d){ cleanup(); resolve(d); };
+    var q = [];
+    for (var k in params) q.push(encodeURIComponent(k)+"="+encodeURIComponent(params[k]));
+    q.push("callback="+cb);
+    var s = document.createElement("script");
+    s.src = url + (url.indexOf("?")>=0?"&":"?") + q.join("&");
+    s.onerror = function(){ cleanup(); reject(new Error("network")); };
+    document.head.appendChild(s);
+  });
+}
+
+function load(){
+  if (!ST.endpoint || ST.endpoint.indexOf("http") !== 0){
+    // 저장소가 없을 때: 이 기기에 남은 기록이라도 보여 주되 출처를 분명히 밝힙니다.
+    var local = readLocal();
+    ST.rows = local;
+    ST.source = local.length ? "local" : "none";
+    ST.error = null;
+    draw();
+    return Promise.resolve();
+  }
+  ST.loading = true; ST.error = null; draw();
+  return jsonp(ST.endpoint, { action:"list" }).then(function(res){
+    if (!res || res.ok !== true) throw new Error((res && res.error) || "server");
+    ST.rows = (res.rows || []).map(normalize);
+    ST.source = "sheet";
+    ST.loading = false;
+    ST.error = null;
+    draw();
+  }).catch(function(e){
+    ST.loading = false;
+    ST.error = "결과를 불러오지 못했습니다. 주소가 맞는지, 웹 앱이 ‘모든 사용자’에게 공개되어 있는지 확인해 주세요.";
+    var local = readLocal();
+    ST.rows = local;
+    ST.source = local.length ? "local" : "none";
+    draw();
+  });
+}
+
+function readLocal(){
+  try { return (JSON.parse(localStorage.getItem(LS.records) || "[]")).map(normalize); }
+  catch(e){ return []; }
+}
+
+function normalize(r){
+  return {
+    기록ID: r["기록ID"] || "",
+    제출일시: r["제출일시"] || "",
+    이름: (r["이름"] || "").toString().trim(),
+    번호: (r["번호"] == null ? "" : String(r["번호"])).trim(),
+    미션: (r["미션"] || "").toString().trim(),
+    점수: num(r["점수"]),
+    성공여부: r["성공여부"] || "",
+    정답개수: num(r["정답개수"]),
+    오답개수: num(r["오답개수"]),
+    소요시간: num(r["소요시간(초)"] != null ? r["소요시간(초)"] : r["소요시간"]),
+    시도: num(r["시도"]) || 1,
+    선택한답: r["선택한답"] || "",
+    어려웠던점: r["어려웠던점"] || ""
+  };
+}
+
+/* ---------------- 집계 ---------------- */
+function key(r){ return r.이름 + "#" + r.번호 + "#" + r.미션; }
+
+/* 학생·미션마다 한 줄로 줄입니다 (첫 시도 / 최고 / 마지막) */
+function reduceRows(rows, basis){
+  var map = {};
+  rows.forEach(function(r){
+    if (!r.이름 || !r.미션) return;
+    var k = key(r), cur = map[k];
+    if (!cur){ map[k] = r; return; }
+    if (basis === "best"){ if (r.점수 > cur.점수) map[k] = r; }
+    else if (basis === "first"){ if (r.시도 < cur.시도) map[k] = r; }
+    else { if (r.시도 > cur.시도) map[k] = r; }
+  });
+  return Object.keys(map).map(function(k){ return map[k]; });
+}
+
+function stats(list){
+  if (!list.length) return null;
+  var sum = 0, succ = 0;
+  list.forEach(function(r){ sum += r.점수; if (r.점수 >= 90) succ++; });
+  return {
+    n: list.length,
+    avg: Math.round(sum / list.length * 10) / 10,
+    rate: Math.round(succ / list.length * 100)
+  };
+}
+
+/* ---------------- 그리기 ---------------- */
+function draw(){
+  drawConn();
+  var rows = ST.rows || [];
+  var reduced = reduceRows(rows, ST.basis);
+  drawOverall(rows, reduced);
+  drawCompare(reduced);
+  drawReasons(rows);
+  drawTable(reduced);
+  el("stamp").textContent = rows.length ? ("마지막 확인 " + new Date().toLocaleTimeString("ko-KR")) : "";
+}
+
+function drawConn(){
+  var out = "";
+  if (ST.loading) out += '<div class="notice">⏳ 불러오는 중…</div>';
+  if (ST.error)   out += '<div class="notice bad">' + esc(ST.error) + '</div>';
+  if (ST.source === "sheet")
+    out += '<div class="notice good">✅ Google Sheet에 연결되었습니다. 저장된 기록 ' + (ST.rows ? ST.rows.length : 0) + '건.</div>';
+  else if (ST.source === "local")
+    out += '<div class="notice warn">⚠️ 저장소에 연결되지 않아 <b>이 기기에 남아 있는 기록</b>만 보여 줍니다. 다른 학생의 결과는 포함되지 않습니다.</div>';
+  else if (!ST.loading && !ST.error)
+    out += '<div class="notice warn">저장소 주소를 넣고 [연결하고 불러오기]를 눌러 주세요. 설치 방법은 함께 드린 <b>설치안내.md</b>에 있습니다.</div>';
+  el("connstate").innerHTML = out;
+}
+
+function tile(n, k){ return '<div class="tile"><div class="n">' + n + '</div><div class="k">' + esc(k) + '</div></div>'; }
+
+function drawOverall(rows, reduced){
+  if (!rows.length){
+    el("overall").innerHTML = '<div class="empty">아직 제출한 학생이 없습니다.</div>';
+    return;
+  }
+  var students = {};
+  rows.forEach(function(r){ if (r.이름) students[r.이름 + "#" + r.번호] = 1; });
+  var st = stats(reduced);
+  var reflected = rows.filter(function(r){ return r.어려웠던점; }).length;
+  el("overall").innerHTML =
+    '<div class="tiles">'
+    + tile(Object.keys(students).length + '<small style="font-size:18px">명</small>', "참여 학생 수")
+    + tile(rows.length + '<small style="font-size:18px">건</small>', "제출 횟수 (재도전 포함)")
+    + tile((st ? st.avg : "–") + '<small style="font-size:18px">점</small>', "평균 점수")
+    + tile((st ? st.rate : "–") + '<small style="font-size:18px">%</small>', "미션 성공률 (90점 이상)")
+    + '</div>'
+    + '<p class="muted" style="margin-top:12px">“어려웠던 점”을 보내 준 기록 ' + reflected + '건.</p>';
+}
+
+function drawCompare(reduced){
+  var order = ["말","그림","문자"];
+  var out = '<div class="cmp">';
+  var any = false, maxAvg = 0;
+  var byMission = {};
+  order.forEach(function(m){
+    var list = reduced.filter(function(r){ return r.미션 === m; });
+    var s = stats(list);
+    byMission[m] = s;
+    if (s){ any = true; maxAvg = Math.max(maxAvg, s.avg); }
+  });
+
+  order.forEach(function(m){
+    var s = byMission[m], cls = MISSION_KEYS[m];
+    out += '<div class="mcard ' + cls + '">'
+        +    '<div class="em">' + MISSION_EMOJI[m] + '</div>'
+        +    '<div class="nm">' + m + '</div>';
+    if (s){
+      out += '<div class="avg">' + s.avg + '<small>점</small></div>'
+          +  '<div class="meta">참여 ' + s.n + '명 · 성공률 ' + s.rate + '%</div>';
+    } else {
+      out += '<div class="none">아직 제출한<br>학생이 없습니다.</div>';
+    }
+    out += '</div>';
+  });
+  out += '</div>';
+
+  if (any){
+    out += '<div class="bars">';
+    order.forEach(function(m){
+      var s = byMission[m];
+      var pct = s ? (maxAvg ? Math.round(s.avg / 100 * 100) : 0) : 0;
+      out += '<div class="bar">'
+          +    '<span class="lb">' + MISSION_EMOJI[m] + ' ' + m + '</span>'
+          +    '<span class="tr"><span class="fl" style="width:' + pct + '%;background:var(--' + MISSION_KEYS[m] + ')"></span></span>'
+          +    '<span class="vl">' + (s ? s.avg + '점' : '–') + '</span>'
+          +  '</div>';
+    });
+    out += '</div>';
+  } else {
+    out = '<div class="empty">아직 제출한 학생이 없습니다.</div>';
+  }
+  el("compare").innerHTML = out;
+}
+
+function drawReasons(rows){
+  var withR = rows.filter(function(r){ return r.어려웠던점; });
+  if (!withR.length){
+    el("reasons").innerHTML = '<div class="empty">아직 “어려웠던 점”을 보낸 학생이 없습니다.</div>';
+    return;
+  }
+  var order = ["말","그림","문자"];
+  var out = '<div class="cmp">';
+  order.forEach(function(m){
+    var list = withR.filter(function(r){ return r.미션 === m; });
+    out += '<div><h3>' + MISSION_EMOJI[m] + ' ' + m + ' <span class="muted">(' + list.length + '명)</span></h3>';
+    if (!list.length){ out += '<p class="muted">응답 없음</p></div>'; return; }
+    var counts = {};
+    REASON_LABELS.forEach(function(l){ counts[l] = 0; });
+    list.forEach(function(r){
+      REASON_LABELS.forEach(function(l){
+        var needle = (l === "기타") ? "기타" : l;
+        if (r.어려웠던점.indexOf(needle) >= 0) counts[l]++;
+      });
+    });
+    out += '<ul class="plain reasons">';
+    REASON_LABELS.forEach(function(l){
+      if (!counts[l]) return;
+      var pct = Math.round(counts[l] / list.length * 100);
+      out += '<li><div style="font-size:14px;font-weight:700;margin-bottom:3px">' + esc(l) + '</div>'
+          +  '<div class="rb"><span class="tr"><span class="fl" style="width:' + pct + '%"></span></span>'
+          +  '<span style="font-weight:800;font-size:13px">' + counts[l] + '명</span></div></li>';
+    });
+    out += '</ul></div>';
+  });
+  out += '</div>';
+  el("reasons").innerHTML = out;
+}
+
+function drawTable(reduced){
+  var list = reduced.slice();
+  if (ST.filter !== "all") list = list.filter(function(r){ return r.미션 === ST.filter; });
+  if (!list.length){
+    el("table").innerHTML = '<div class="empty">' +
+      ((ST.rows && ST.rows.length) ? '이 미션에는 아직 제출한 학생이 없습니다.' : '아직 제출한 학생이 없습니다.') + '</div>';
+    return;
+  }
+  var k = ST.sortKey, d = ST.sortDir;
+  list.sort(function(a, b){
+    var x = a[k], y = b[k];
+    if (k === "이름" || k === "미션"){ return String(x).localeCompare(String(y), "ko") * d; }
+    if (k === "번호"){ return (num(x) - num(y)) * d; }
+    return (num(x) - num(y)) * d;
+  });
+
+  var cols = [["이름","이름",""],["번호","번호","num"],["미션","미션",""],["점수","점수","num"],
+              ["성공","성공여부",""],["시도","시도","num"],["소요시간","소요시간","num"]];
+  var out = '<div class="tscroll"><table><thead><tr>';
+  cols.forEach(function(c){
+    var arrow = (ST.sortKey === c[1]) ? (d === 1 ? " ▲" : " ▼") : "";
+    out += '<th class="' + c[2] + '" data-sort="' + c[1] + '">' + c[0] + arrow + '</th>';
+  });
+  out += '</tr></thead><tbody>';
+  list.forEach(function(r){
+    out += '<tr>'
+        +   '<td>' + esc(r.이름) + '</td>'
+        +   '<td class="num">' + esc(r.번호) + '</td>'
+        +   '<td><span class="pill ' + (MISSION_KEYS[r.미션] || "") + '">' + MISSION_EMOJI[r.미션] + ' ' + esc(r.미션) + '</span></td>'
+        +   '<td class="num"><b>' + r.점수 + '</b></td>'
+        +   '<td>' + (r.점수 >= 90 ? '<span class="yes">성공</span>' : '<span class="no">–</span>') + '</td>'
+        +   '<td class="num">' + r.시도 + '</td>'
+        +   '<td class="num">' + fmtTime(r.소요시간) + '</td>'
+        + '</tr>';
+  });
+  out += '</tbody></table></div>';
+  out += '<p class="muted" style="margin-top:10px">기준: ' +
+    ({best:"최고 점수", first:"첫 시도", last:"마지막 시도"})[ST.basis] +
+    ' · 학생 한 명당 미션별 한 줄로 보여 줍니다.</p>';
+  el("table").innerHTML = out;
+}
+
+/* ---------------- 링크 배포 ---------------- */
+var LINK_DEFS = [
+  { id:"speech",  t:"🗣️ 말 미션 링크" },
+  { id:"picture", t:"🎨 그림 미션 링크" },
+  { id:"text",    t:"📖 문자 미션 링크" },
+  { id:"teacher", t:"👩‍🏫 교사용 결과판" }
+];
+function getLinks(){ try { return JSON.parse(lsGet(LS.links, "{}")); } catch(e){ return {}; } }
+function drawLinks(){
+  var saved = getLinks();
+  var out = "";
+  LINK_DEFS.forEach(function(d){
+    out += '<div class="lk">'
+        +   '<h4>' + d.t + '</h4>'
+        +   '<div class="row">'
+        +     '<input type="text" data-link="' + d.id + '" placeholder="게시한 주소를 붙여넣으세요" value="' + esc(saved[d.id] || "") + '">'
+        +     '<button data-copy="' + d.id + '">링크 복사</button>'
+        +   '</div>'
+        +   '<div class="qr" id="qr_' + d.id + '"><div class="qrnote">주소를 넣으면<br>QR이 만들어집니다</div></div>'
+        + '</div>';
+  });
+  el("links").innerHTML = out;
+  LINK_DEFS.forEach(function(d){ renderQR(d.id, saved[d.id] || ""); });
+}
+function renderQR(id, url){
+  var box = el("qr_" + id);
+  if (!box) return;
+  if (!url){ box.innerHTML = '<div class="qrnote">주소를 넣으면<br>QR이 만들어집니다</div>'; return; }
+  if (typeof qrcode === "undefined"){
+    box.innerHTML = '<div class="qrnote">QR 만들기 도구를<br>불러오지 못했습니다</div>';
+    return;
+  }
+  try {
+    var qr = qrcode(0, "M");
+    qr.addData(url);
+    qr.make();
+    box.innerHTML = qr.createSvgTag({ scalable:true, margin:0 });
+  } catch(e){
+    box.innerHTML = '<div class="qrnote">주소가 너무 길어<br>QR을 만들지 못했습니다</div>';
+  }
+}
+
+/* ---------------- 이벤트 ---------------- */
+document.addEventListener("click", function(e){
+  var t = e.target;
+
+  if (t.id === "connect"){
+    ST.endpoint = el("ep").value.trim();
+    lsSet(LS.ep, ST.endpoint);
+    load();
+    return;
+  }
+  if (t.id === "refresh"){ load(); return; }
+  if (t.id === "auto"){
+    if (ST.autoTimer){ clearInterval(ST.autoTimer); ST.autoTimer = null; t.textContent = "자동 새로고침 끔"; t.classList.remove("on"); }
+    else { ST.autoTimer = setInterval(load, 30000); t.textContent = "자동 새로고침 켬 (30초)"; t.classList.add("on"); load(); }
+    return;
+  }
+  if (t.classList && t.classList.contains("basis")){
+    ST.basis = t.getAttribute("data-basis");
+    [].forEach.call(document.querySelectorAll(".basis"), function(b){ b.classList.toggle("on", b === t); });
+    draw();
+    return;
+  }
+  if (t.classList && t.classList.contains("filt")){
+    ST.filter = t.getAttribute("data-f");
+    [].forEach.call(document.querySelectorAll(".filt"), function(b){ b.classList.toggle("on", b === t); });
+    draw();
+    return;
+  }
+  var th = t.closest && t.closest("th[data-sort]");
+  if (th){
+    var k = th.getAttribute("data-sort");
+    if (ST.sortKey === k) ST.sortDir *= -1; else { ST.sortKey = k; ST.sortDir = (k === "이름" || k === "미션") ? 1 : -1; }
+    draw();
+    return;
+  }
+  var cp = t.getAttribute && t.getAttribute("data-copy");
+  if (cp){
+    var inp = document.querySelector('input[data-link="' + cp + '"]');
+    if (!inp || !inp.value.trim()){ t.textContent = "주소 없음"; setTimeout(function(){ t.textContent = "링크 복사"; }, 1400); return; }
+    var val = inp.value.trim();
+    var ok = function(){ t.textContent = "복사됨 ✓"; setTimeout(function(){ t.textContent = "링크 복사"; }, 1400); };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(val).then(ok, function(){ inp.select(); document.execCommand("copy"); ok(); });
+    } else { inp.select(); try { document.execCommand("copy"); } catch(err){} ok(); }
+    return;
+  }
+});
+
+document.addEventListener("input", function(e){
+  var lk = e.target.getAttribute && e.target.getAttribute("data-link");
+  if (lk){
+    var saved = getLinks();
+    saved[lk] = e.target.value.trim();
+    lsSet(LS.links, JSON.stringify(saved));
+    renderQR(lk, saved[lk]);
+  }
+});
+
+/* ---------------- 시작 ---------------- */
+el("ep").value = ST.endpoint;
+drawLinks();
+load();
+</script>
+</body>
+</html>
