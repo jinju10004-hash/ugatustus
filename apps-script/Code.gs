@@ -157,8 +157,49 @@ function getSheet() {
     sh.appendRow(HEADERS);
     sh.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
     sh.setFrozenRows(1);
+    서식잡기(sh);
   }
   return sh;
+}
+
+/**
+ * 읽기 좋게 열 너비와 줄바꿈을 잡아 줍니다.
+ * 짧은 항목은 내용에 맞추고, 문장이 긴 항목은 너비를 고정한 뒤 줄바꿈합니다.
+ * 시트를 이미 만든 뒤라면 편집기에서 서식다시잡기 를 실행하세요.
+ */
+function 서식잡기(sh) {
+  var 고정너비 = { '선택한답': 320, '어려웠던점': 260, '제출일시': 150, '기록ID': 90 };
+
+  for (var i = 0; i < HEADERS.length; i++) {
+    var col = i + 1;
+    var name = HEADERS[i];
+    if (고정너비[name]) {
+      sh.setColumnWidth(col, 고정너비[name]);
+    } else {
+      sh.autoResizeColumn(col);
+      // 자동 맞춤이 머리글보다 좁아지지 않도록 여유를 둡니다.
+      if (sh.getColumnWidth(col) < 80) sh.setColumnWidth(col, 80);
+    }
+  }
+
+  // 긴 문장은 셀 안에서 접히게, 나머지는 한 줄로 둡니다.
+  var 줄바꿈열 = ['선택한답', '어려웠던점'];
+  for (var j = 0; j < 줄바꿈열.length; j++) {
+    var c = HEADERS.indexOf(줄바꿈열[j]) + 1;
+    if (c > 0) sh.getRange(1, c, sh.getMaxRows(), 1).setWrap(true);
+  }
+
+  sh.getRange(1, 1, 1, HEADERS.length)
+    .setBackground('#F1E7D2')
+    .setVerticalAlignment('middle');
+}
+
+/** 시트를 이미 만든 뒤에 서식만 다시 잡고 싶을 때 실행하세요. */
+function 서식다시잡기() {
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  if (!sh) { Logger.log('"' + SHEET_NAME + '" 시트가 아직 없습니다.'); return; }
+  서식잡기(sh);
+  Logger.log('서식을 다시 잡았습니다.');
 }
 
 function findRowById(sh, id) {
