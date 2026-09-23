@@ -30,25 +30,33 @@ $fmt = New-Object System.Speech.AudioFormat.SpeechAudioFormatInfo(
   [System.Speech.AudioFormat.AudioBitsPerSample]::Sixteen,
   [System.Speech.AudioFormat.AudioChannel]::Mono)
 
+# 음높이를 낮춰 중년 남성에 가까운 목소리로 만듭니다.
+# 이 컴퓨터에는 한국어 음성이 여성(Heami) 하나뿐이라 음높이를 내리는 방식입니다.
+# 더 굵게 하려면 -50%, 덜 굵게 하려면 -20% 처럼 바꾸세요.
+$pitch = '-35%'
+
 function Make-Wav([string]$text, [string]$path) {
   $s = New-Object System.Speech.Synthesis.SpeechSynthesizer
   try { $s.SelectVoice($voiceName) } catch { }
   $s.Rate = 2
   $s.SetOutputToWaveFile($path, $fmt)
-  $s.Speak($text)
+  $esc = $text.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')
+  $ssml = "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='ko-KR'>" +
+          "<prosody pitch='$pitch'>$esc</prosody></speak>"
+  try { $s.SpeakSsml($ssml) } catch { $s.Speak($text) }
   $s.SetOutputToNull()
   $s.Dispose()
 }
 
+# 5단계를 하나로 이어 붙여 끊김 없이 한 번에 들려줍니다.
+# 단계 사이에는 숨 돌릴 틈만 짧게 둡니다.
+$story = ($steps -join ' ... ')
 $total = 0
-for ($i = 0; $i -lt $steps.Count; $i++) {
-  $name = 'step{0:D2}.wav' -f ($i + 1)
-  $path = Join-Path $out $name
-  Make-Wav $steps[$i] $path
-  $kb = [int]((Get-Item $path).Length / 1024)
-  $total += $kb
-  Write-Output ('  {0}  {1,5} KB' -f $name, $kb)
-}
+$path = Join-Path $out 'story.wav'
+Make-Wav $story $path
+$kb = [int]((Get-Item $path).Length / 1024)
+$total += $kb
+Write-Output ('  story.wav  {0,5} KB  (전체 이야기 한 파일)' -f $kb)
 
 # 시작 화면 소리 확인용 (제작 방법은 들어 있지 않습니다)
 Make-Wav '잘 들리니? 그럼 시작해 보자!' (Join-Path $out 'soundcheck.wav')
