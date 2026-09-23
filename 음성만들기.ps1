@@ -33,7 +33,7 @@ $fmt = New-Object System.Speech.AudioFormat.SpeechAudioFormatInfo(
 function Make-Wav([string]$text, [string]$path) {
   $s = New-Object System.Speech.Synthesis.SpeechSynthesizer
   try { $s.SelectVoice($voiceName) } catch { }
-  $s.Rate = 0
+  $s.Rate = 2
   $s.SetOutputToWaveFile($path, $fmt)
   $s.Speak($text)
   $s.SetOutputToNull()
