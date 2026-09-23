@@ -26,7 +26,7 @@ Write-Output ("대본 " + $steps.Count + "단계를 읽었습니다.")
 # --- 음성 설정 ---
 $voiceName = 'Microsoft Heami Desktop'   # 한국어 여성 음성
 $fmt = New-Object System.Speech.AudioFormat.SpeechAudioFormatInfo(
-  11025,
+  8000,
   [System.Speech.AudioFormat.AudioBitsPerSample]::Sixteen,
   [System.Speech.AudioFormat.AudioChannel]::Mono)
 
