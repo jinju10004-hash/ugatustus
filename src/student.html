@@ -504,7 +504,7 @@ function render(){
   el("app").innerHTML = v();
   window.scrollTo(0, 0);
   if (S.screen === "info" && MISSION_ID === "speech" && S.stepIndex < SPEECH_STEPS.length){
-    speak(SPEECH_STEPS[S.stepIndex]);
+    speakStep(S.stepIndex);
   }
 }
 
@@ -579,7 +579,9 @@ function viewInfoSpeech(){
       + '</div>';
     if (!ttsSupported()){
       body += '<div class="notice bad" style="margin:16px 0 0">'
-           +    '이 기기에서는 소리를 낼 수 없어요. <b>선생님께 말씀드리세요.</b>'
+           +    '이 기기에서는 소리가 나지 않아요.<br>'
+           +    '카카오톡이나 다른 앱 안에서 열었다면, <b>크롬(Chrome) 브라우저로 열어 보세요.</b><br>'
+           +    '그래도 안 되면 <b>선생님께 말씀드리세요.</b>'
            +  '</div>'
            +  '<button class="btn ghost" id="teacherRead" style="margin-top:10px">🧑‍🏫 선생님이 읽어 주기</button>';
     }
@@ -727,10 +729,24 @@ function viewResult(){
 /* ============================================================
    음성 (말 미션)
    ============================================================ */
-function ttsSupported(){
+/* 소리를 내는 방법이 두 가지입니다.
+   ① audio/ 폴더에 미리 만들어 둔 음성 파일  ← 기본. 어떤 브라우저에서도 납니다.
+   ② 브라우저의 음성 읽기 기능(Web Speech)   ← ①이 없거나 실패할 때만.
+   카카오톡·클래스팅 같은 앱 안 브라우저에는 ②가 아예 없어서 ①이 필요합니다. */
+var AUDIO_BASE = "audio/";
+var audioEl = null;        // 지금 재생 중인 음성
+var audioUsable = null;    // null=아직 모름, true/false=확인됨
+
+function webSpeechSupported(){
   return typeof window !== "undefined" && "speechSynthesis" in window
       && typeof SpeechSynthesisUtterance !== "undefined";
 }
+/* 둘 중 하나라도 되면 소리를 낼 수 있습니다. 파일 쪽은 실제로 틀어 봐야 알 수 있어
+   아직 확인 전(null)이면 일단 가능하다고 봅니다. */
+function ttsSupported(){
+  return audioUsable !== false || webSpeechSupported();
+}
+function audioUrl(name){ return AUDIO_BASE + name; }
 function koVoice(){
   try {
     var vs = window.speechSynthesis.getVoices() || [];
@@ -744,8 +760,9 @@ function setSpeaking(on){
   if (w) w.classList.toggle("on", on);
   if (st) st.textContent = on ? "잘 들어 보세요…" : "다 들었어요";
 }
-function speak(text){
-  if (!ttsSupported()) return;
+/* 브라우저 음성 읽기 — 음성 파일을 못 쓸 때만 씁니다. */
+function speakWeb(text){
+  if (!webSpeechSupported()){ setSpeaking(false); audioUsable = false; render(); return; }
   try {
     window.speechSynthesis.cancel();
     var u = new SpeechSynthesisUtterance(text);
@@ -758,8 +775,31 @@ function speak(text){
     window.speechSynthesis.speak(u);
   } catch(e){ setSpeaking(false); }
 }
+
+/* 미리 만들어 둔 음성 파일을 먼저 틉니다. 실패하면 브라우저 음성으로 넘어갑니다. */
+function playFile(name, fallbackText){
+  stopSpeak();
+  try {
+    var a = new Audio(audioUrl(name));
+    audioEl = a;
+    a.onplaying = function(){ audioUsable = true; setSpeaking(true); };
+    a.onended   = function(){ setSpeaking(false); };
+    a.onerror   = function(){ audioUsable = false; speakWeb(fallbackText); };
+    setSpeaking(true);
+    var p = a.play();
+    if (p && p.catch) p.catch(function(){ audioUsable = false; speakWeb(fallbackText); });
+  } catch(e){
+    audioUsable = false;
+    speakWeb(fallbackText);
+  }
+}
+
+function speakStep(i){
+  playFile("step" + (i + 1 < 10 ? "0" : "") + (i + 1) + ".wav", SPEECH_STEPS[i]);
+}
 function stopSpeak(){
   try { window.speechSynthesis.cancel(); } catch(e){}
+  try { if (audioEl){ audioEl.pause(); audioEl.onerror = null; audioEl = null; } } catch(e){}
   S.speaking = false;
 }
 
@@ -784,7 +824,7 @@ document.addEventListener("submit", function(e){
 document.addEventListener("click", function(e){
   var t = e.target;
 
-  if (t.closest && t.closest("#soundcheck")){ speak("잘 들리니? 그럼 시작해 보자!"); return; }
+  if (t.closest && t.closest("#soundcheck")){ playFile("soundcheck.wav", "잘 들리니? 그럼 시작해 보자!"); return; }
 
   if (t.closest && t.closest("#teacherRead")){
     /* 기기에서 소리가 나지 않을 때만 나타나는 선생님용 보조 기능입니다. */
