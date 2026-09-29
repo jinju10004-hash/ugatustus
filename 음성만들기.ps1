@@ -35,14 +35,40 @@ $fmt = New-Object System.Speech.AudioFormat.SpeechAudioFormatInfo(
 # 더 굵게 하려면 -50%, 덜 굵게 하려면 -20% 처럼 바꾸세요.
 $pitch = '-35%'
 
+# SAPI 한국어 음성은 쉼표나 연결어미에서 거의 쉬지 않아 말이 뭉개집니다.
+# 쉼표·문장 끝·연결어미 뒤에 쉼(break)을 직접 넣어 띄어읽기를 만들어 줍니다.
+# 쉼이 길다 싶으면 아래 숫자를 줄이세요.
+$쉼_문장끝   = 500   # 마침표 뒤
+$쉼_쉼표     = 260   # 쉼표 뒤
+$쉼_연결어미 = 170   # ~는데, ~니, ~고 같은 연결 지점
+$쉼_단락     = 800   # 단계와 단계 사이
+
+function Build-Ssml([string]$text) {
+  $t = $text.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')
+
+  # 단계 구분자 먼저 (다른 규칙에 걸리지 않도록)
+  $t = $t.Replace(' ... ', " <break time='$($쉼_단락)ms'/> ")
+
+  # 문장 끝
+  $t = [regex]::Replace($t, '([.!?])\s+', "`$1 <break time='$($쉼_문장끝)ms'/> ")
+
+  # 쉼표
+  $t = $t.Replace(', ', ", <break time='$($쉼_쉼표)ms'/> ")
+
+  # 연결어미 — 한 호흡이 너무 길어지지 않게 끊어 줍니다
+  foreach ($어미 in @('는데', '으니', '하니', '니까', '지만', '으며', '하며', '다가', '거든', '텐데', '해야 하고', '어야 하고')) {
+    $t = $t.Replace($어미 + ' ', $어미 + " <break time='$($쉼_연결어미)ms'/> ")
+  }
+  return $t
+}
+
 function Make-Wav([string]$text, [string]$path) {
   $s = New-Object System.Speech.Synthesis.SpeechSynthesizer
   try { $s.SelectVoice($voiceName) } catch { }
   $s.Rate = 2
   $s.SetOutputToWaveFile($path, $fmt)
-  $esc = $text.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')
   $ssml = "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='ko-KR'>" +
-          "<prosody pitch='$pitch'>$esc</prosody></speak>"
+          "<prosody pitch='$pitch'>" + (Build-Ssml $text) + "</prosody></speak>"
   try { $s.SpeakSsml($ssml) } catch { $s.Speak($text) }
   $s.SetOutputToNull()
   $s.Dispose()
