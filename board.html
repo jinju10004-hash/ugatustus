@@ -42,6 +42,8 @@
   .bignum{display:flex;align-items:baseline;justify-content:center;gap:.6vw;margin:.3vw 0 .2vw}
   .bignum .n{font-size:11vw;font-weight:900;line-height:.95;color:var(--c);letter-spacing:-.04em}
   .bignum .u{font-size:2.4vw;font-weight:900;color:var(--dim)}
+  .bignum .n2{font-size:5vw;font-weight:900;line-height:.95;color:var(--dim);letter-spacing:-.03em;margin-left:1.2vw}
+  .bignum .u2{font-size:1.5vw;font-weight:900;color:var(--dim)}
   .meta{text-align:center;font-size:1.4vw;font-weight:800;color:var(--dim);margin-bottom:.7vw}
   .meta b{color:var(--ink)}
 
@@ -182,7 +184,7 @@ function draw(){
     +   '<h1>🪓 우가투스투스 미션 실황</h1>'
     +   '<div class="sum">'
     +     '<span class="dot' + (ST.live ? '' : ' off') + '"></span>'
-    +     '참여 <b>' + Object.keys(totalStudents).length + '</b>명 · 성공 <b>' + totalSuccess + '</b>명'
+    +     '참여 <b>' + Object.keys(totalStudents).length + '</b>명 · 성공 <b>' + totalSuccess + '</b>명 · 미완성 <b>' + (rows.length - totalSuccess) + '</b>명'
     +   '</div>'
     + '</header>'
     + '<div class="teams">';
@@ -193,9 +195,14 @@ function draw(){
     var ok = list.filter(function(r){ return r.점수 >= SUCCESS; }).length;
     var avg = list.length ? Math.round(list.reduce(function(s,r){ return s + r.점수; }, 0) / list.length) : null;
 
+    var notYet = list.length - ok;   // 아직 성공하지 못한 인원
+
     html += '<div class="team ' + t.cls + '">'
          +    '<div class="tname">' + t.emoji + ' ' + t.label + '</div>'
-         +    '<div class="bignum"><span class="n">' + ok + '</span><span class="u">명 성공</span></div>'
+         +    '<div class="bignum">'
+         +      '<span class="n">' + ok + '</span><span class="u">명 성공</span>'
+         +      '<span class="n2">' + notYet + '</span><span class="u2">명 미완성</span>'
+         +    '</div>'
          +    '<div class="meta">참여 <b>' + list.length + '</b>명'
          +      (avg === null ? '' : ' · 평균 <b>' + avg + '</b>점')
          +    '</div>'

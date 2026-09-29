@@ -345,7 +345,8 @@ var S = {
   speaking:false,
   storyStarted:false,   // 이야기를 이미 틀었는지
   storyDone:false,      // 끝까지 들었는지
-  storyProgress:0
+  storyProgress:0,
+  visitedSelect:false   // 재료 선택 화면에 한 번이라도 갔는지 (문자 미션 안내 문구용)
 };
 
 /* ============================================================
@@ -616,14 +617,30 @@ function viewInfoPicture(){
 }
 
 function viewInfoText(){
+  /* 재료를 고르다가 돌아온 경우에는 고른 것이 그대로 남아 있다고 알려 줍니다. */
+  var 돌아옴 = S.visitedSelect;
+  var n = Object.keys(S.selected).length;
+
   return topbar("일기 읽기", 1, 0)
     + '<div class="panel">'
     +   '<h2>📖 우가투스투스의 일기</h2>'
-    +   '<p class="sub">천천히 읽어 보세요. 이 일기는 나중에도 다시 읽을 수 있어요.</p>'
+    +   '<p class="sub">'
+    +     (돌아옴
+        ? '다시 읽어 보세요. 고른 재료는 그대로 있어요.'
+        : '천천히 읽어 보세요. 이 일기는 나중에도 다시 읽을 수 있어요.')
+    +   '</p>'
     +   diaryHTML()
-    +   '<div class="btnrow"><button class="btn" id="go">재료 고르러 가기</button></div>'
+    +   '<div class="btnrow"><button class="btn" id="go">'
+    +     (돌아옴
+        ? ('재료 고르기로 돌아가기' + (n > 0 ? ' (' + n + '개 고름)' : ''))
+        : '재료 고르러 가기')
+    +   '</button></div>'
     + '</div>'
-    + '<p class="foot">재료를 고르는 동안에도 [📖 일기 다시 읽기] 버튼으로 언제든 확인할 수 있어요.</p>';
+    + '<p class="foot">'
+    +   (돌아옴
+      ? '몇 번이든 다시 읽으러 올 수 있어요.'
+      : '재료를 고르는 동안에도 [📖 일기 다시 보러 가기] 버튼으로 언제든 돌아올 수 있어요.')
+    + '</p>';
 }
 
 function diaryHTML(){
@@ -660,7 +677,7 @@ function viewSelect(){
   out += '<div class="picked">'
       +    '<div class="pickcount">고른 재료 <b id="cnt">' + n + '</b>개</div>'
       +    '<div class="btnrow">'
-      +      (MISSION_ID === "text" ? '<button class="btn ghost" id="reread">📖 일기 다시 읽기</button>' : '')
+      +      (MISSION_ID === "text" ? '<button class="btn ghost" id="backToDiary">📖 일기 다시 보러 가기</button>' : '')
       +      '<button class="btn" id="submit"' + (S.submitting ? ' disabled' : '') + '>'
       +        (S.submitting ? '<span class="spinner"></span> 결과 저장 중…' : '제출하기')
       +      '</button>'
@@ -896,6 +913,7 @@ document.addEventListener("click", function(e){
 
   if (t.closest && t.closest("#go")){
     stopSpeak();
+    S.visitedSelect = true;
     S.screen = "select";
     render();
     return;
@@ -906,8 +924,11 @@ document.addEventListener("click", function(e){
     return;
   }
 
-  if (t.closest && t.closest("#reread")){
-    openModal('<h2>📖 우가투스투스의 일기</h2>' + diaryHTML());
+  if (t.closest && t.closest("#backToDiary")){
+    /* 팝업이 아니라 일기 화면으로 실제로 돌아갑니다. 고른 재료는 S.selected 에
+       그대로 있어 돌아오면 선택이 유지됩니다. */
+    S.screen = "info";
+    render();
     return;
   }
 
@@ -944,6 +965,7 @@ document.addEventListener("click", function(e){
     S.reflectPicked = {}; S.reflectEtc = ""; S.reflectState = "idle";
     S.attempt = Store.attemptNo(S.name, S.num);
     S.stepIndex = 0; S.storyStarted = false; S.storyDone = false; S.storyProgress = 0;
+    S.visitedSelect = false;
     S.startedAt = Date.now(); S.screen = "info";
     render();
     return;
