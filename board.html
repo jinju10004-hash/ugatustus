@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우가투스투스 미션 실황판</title>
+<style>
+  /* 전자칠판(65~86인치)을 3~8m 떨어져서 봅니다.
+     모든 글자 크기를 vw(화면 너비 비율)로 잡아 어떤 크기·해상도에서도
+     같은 비율로 보이게 했습니다. */
+  :root{
+    --speech:#FF8A2B; --picture:#43C46A; --text:#4D9BFF;
+    --bg:#0E0B08; --panel:#1B1510; --line:#3A2E22;
+    --ink:#F6EEE2; --dim:#A8927A;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;
+    overflow:hidden;
+  }
+  .wrap{height:100vh;display:flex;flex-direction:column;padding:1.2vw 1.4vw}
+
+  /* ---------- 머리말 ---------- */
+  header{display:flex;align-items:baseline;gap:1.4vw;flex:0 0 auto;padding-bottom:.9vw}
+  h1{font-size:2.5vw;font-weight:900;letter-spacing:-.02em}
+  .sum{font-size:1.5vw;font-weight:800;color:var(--dim);margin-left:auto}
+  .sum b{color:var(--ink)}
+  .dot{display:inline-block;width:.8vw;height:.8vw;border-radius:50%;background:#48D16B;margin-right:.5vw}
+  .dot.off{background:#8A6A4A}
+
+  /* ---------- 세 팀 ---------- */
+  .teams{flex:1 1 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:1.1vw;min-height:0}
+  .team{
+    background:var(--panel);border-radius:1.2vw;border-top:.7vw solid var(--c);
+    display:flex;flex-direction:column;min-height:0;padding:1.1vw 1.2vw;
+  }
+  .team.speech{--c:var(--speech)} .team.picture{--c:var(--picture)} .team.text{--c:var(--text)}
+  .tname{font-size:2.3vw;font-weight:900;color:var(--c);display:flex;align-items:center;gap:.6vw}
+
+  .bignum{display:flex;align-items:baseline;justify-content:center;gap:.6vw;margin:.3vw 0 .2vw}
+  .bignum .n{font-size:11vw;font-weight:900;line-height:.95;color:var(--c);letter-spacing:-.04em}
+  .bignum .u{font-size:2.4vw;font-weight:900;color:var(--dim)}
+  .meta{text-align:center;font-size:1.4vw;font-weight:800;color:var(--dim);margin-bottom:.7vw}
+  .meta b{color:var(--ink)}
+
+  .names{
+    flex:1 1 auto;min-height:0;overflow:hidden;
+    display:flex;flex-wrap:wrap;align-content:flex-start;gap:.5vw;
+    border-top:.15vw solid var(--line);padding-top:.8vw;
+  }
+  .chip{
+    font-size:1.6vw;font-weight:800;padding:.35vw .9vw;border-radius:99px;
+    background:#2A2018;color:var(--dim);white-space:nowrap;
+  }
+  .chip.ok{background:var(--c);color:#171009}
+  .chip .sc{font-size:1.2vw;opacity:.75;margin-left:.4vw}
+  .chip.new{animation:pop .7s cubic-bezier(.2,1.5,.4,1)}
+  @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+  .empty{font-size:1.6vw;font-weight:800;color:var(--dim);text-align:center;padding-top:2vw;width:100%}
+
+  /* ---------- 꼬리말 ---------- */
+  footer{flex:0 0 auto;padding-top:.9vw;display:flex;align-items:center;gap:1.2vw}
+  .q{font-size:1.9vw;font-weight:900}
+  .ctrl{margin-left:auto;display:flex;gap:.6vw;align-items:center}
+  button{
+    font-family:inherit;font-size:1.1vw;font-weight:800;padding:.5vw 1vw;
+    border-radius:.7vw;border:.12vw solid var(--line);background:#241B14;color:var(--ink);cursor:pointer;
+  }
+  button.on{background:var(--ink);color:#1B1510}
+  input{
+    font-family:inherit;font-size:1.1vw;padding:.5vw .8vw;border-radius:.7vw;
+    border:.12vw solid var(--line);background:#241B14;color:var(--ink);width:26vw;
+  }
+
+  /* ---------- 설정 화면 ---------- */
+  .setup{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:4vw}
+  .setup .box{max-width:60vw;text-align:center}
+  .setup h2{font-size:3vw;font-weight:900;margin-bottom:1.2vw}
+  .setup p{font-size:1.5vw;color:var(--dim);margin-bottom:1.6vw;line-height:1.6}
+  .setup input{width:100%;font-size:1.4vw;margin-bottom:1.2vw}
+  .setup button{font-size:1.5vw;padding:.9vw 2.4vw}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============================================================
+   우가투스투스 미션 — 교실 실황판 (전자칠판용)
+   교사용 결과판과 같은 주소를 씁니다. 같은 기기에서 결과판을 한 번
+   연결했다면 주소를 다시 넣을 필요가 없습니다.
+   ============================================================ */
+var LS_EP = "ugatustus_teacher_endpoint";
+var TEAMS = [
+  { key:"말",   cls:"speech",  emoji:"🗣️", label:"말팀" },
+  { key:"그림", cls:"picture", emoji:"🎨", label:"그림팀" },
+  { key:"문자", cls:"text",    emoji:"📖", label:"문자팀" }
+];
+var SUCCESS = 90;   // 성공 기준 점수
+
+var ST = {
+  endpoint: lsGet(LS_EP, ""),
+  rows: null,
+  seen: {},          // 이미 화면에 나온 학생 (새로 들어온 사람만 튀어나오게)
+  showScore: false,
+  live: true,
+  timer: null,
+  lastOk: null
+};
+
+function lsGet(k, d){ try { var v = localStorage.getItem(k); return v === null ? d : v; } catch(e){ return d; } }
+function lsSet(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(m){
+  return ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[m]; }); }
+function num(v){ var n = Number(v); return isFinite(n) ? n : 0; }
+
+/* ---------------- 불러오기 ---------------- */
+function jsonp(url, params){
+  return new Promise(function(resolve, reject){
+    var cb = "bcb_" + Date.now() + "_" + Math.floor(Math.random()*1e6);
+    var timer = setTimeout(function(){ cleanup(); reject(new Error("timeout")); }, 15000);
+    function cleanup(){
+      clearTimeout(timer);
+      try { delete window[cb]; } catch(e){ window[cb] = undefined; }
+      if (s.parentNode) s.parentNode.removeChild(s);
+    }
+    window[cb] = function(d){ cleanup(); resolve(d); };
+    var q = [];
+    for (var k in params) q.push(encodeURIComponent(k)+"="+encodeURIComponent(params[k]));
+    q.push("callback="+cb);
+    var s = document.createElement("script");
+    s.src = url + (url.indexOf("?")>=0?"&":"?") + q.join("&");
+    s.onerror = function(){ cleanup(); reject(new Error("network")); };
+    document.head.appendChild(s);
+  });
+}
+
+function load(){
+  if (!ST.endpoint) { draw(); return Promise.resolve(); }
+  return jsonp(ST.endpoint, { action:"list" }).then(function(res){
+    if (!res || res.ok !== true) throw new Error("server");
+    ST.rows = (res.rows || []).map(function(r){
+      return {
+        이름: (r["이름"]||"").toString().trim(),
+        번호: (r["번호"]==null?"":String(r["번호"])).trim(),
+        미션: (r["미션"]||"").toString().trim(),
+        점수: num(r["점수"]),
+        시도: num(r["시도"]) || 1
+      };
+    }).filter(function(r){ return r.이름 && r.미션; });
+    ST.lastOk = new Date();
+    draw();
+  }).catch(function(){
+    draw();   // 실패해도 마지막 화면은 그대로 둡니다
+  });
+}
+
+/* 학생 한 명은 미션마다 한 번만. 최고 점수를 씁니다. */
+function bestPerStudent(rows){
+  var map = {};
+  rows.forEach(function(r){
+    var k = r.이름 + "#" + r.번호 + "#" + r.미션;
+    if (!map[k] || r.점수 > map[k].점수) map[k] = r;
+  });
+  return Object.keys(map).map(function(k){ return map[k]; });
+}
+
+/* ---------------- 그리기 ---------------- */
+function draw(){
+  if (!ST.endpoint){ drawSetup(); return; }
+
+  var rows = bestPerStudent(ST.rows || []);
+  var totalStudents = {};
+  rows.forEach(function(r){ totalStudents[r.이름 + "#" + r.번호] = 1; });
+  var totalSuccess = rows.filter(function(r){ return r.점수 >= SUCCESS; }).length;
+
+  var html = '<div class="wrap">'
+    + '<header>'
+    +   '<h1>🪓 우가투스투스 미션 실황</h1>'
+    +   '<div class="sum">'
+    +     '<span class="dot' + (ST.live ? '' : ' off') + '"></span>'
+    +     '참여 <b>' + Object.keys(totalStudents).length + '</b>명 · 성공 <b>' + totalSuccess + '</b>명'
+    +   '</div>'
+    + '</header>'
+    + '<div class="teams">';
+
+  TEAMS.forEach(function(t){
+    var list = rows.filter(function(r){ return r.미션 === t.key; });
+    list.sort(function(a,b){ return b.점수 - a.점수; });
+    var ok = list.filter(function(r){ return r.점수 >= SUCCESS; }).length;
+    var avg = list.length ? Math.round(list.reduce(function(s,r){ return s + r.점수; }, 0) / list.length) : null;
+
+    html += '<div class="team ' + t.cls + '">'
+         +    '<div class="tname">' + t.emoji + ' ' + t.label + '</div>'
+         +    '<div class="bignum"><span class="n">' + ok + '</span><span class="u">명 성공</span></div>'
+         +    '<div class="meta">참여 <b>' + list.length + '</b>명'
+         +      (avg === null ? '' : ' · 평균 <b>' + avg + '</b>점')
+         +    '</div>'
+         +    '<div class="names">';
+    if (!list.length){
+      html += '<div class="empty">아직 제출한 학생이<br>없습니다</div>';
+    } else {
+      list.forEach(function(r){
+        var id = r.이름 + "#" + r.번호 + "#" + r.미션;
+        var isNew = !ST.seen[id];
+        ST.seen[id] = 1;
+        var good = r.점수 >= SUCCESS;
+        html += '<span class="chip' + (good ? ' ok' : '') + (isNew ? ' new' : '') + '">'
+             +    esc(r.이름)
+             +    (good ? ' ✓' : '')
+             +    (ST.showScore ? '<span class="sc">' + r.점수 + '</span>' : '')
+             +  '</span>';
+      });
+    }
+    html += '</div></div>';
+  });
+
+  html += '</div>'
+    + '<footer>'
+    +   '<div class="q">왜 같은 미션인데 팀마다 결과가 다를까요?</div>'
+    +   '<div class="ctrl">'
+    +     '<button id="tgScore" class="' + (ST.showScore ? 'on' : '') + '">점수 ' + (ST.showScore ? '숨기기' : '보이기') + '</button>'
+    +     '<button id="tgLive" class="' + (ST.live ? 'on' : '') + '">' + (ST.live ? '실시간 켬' : '멈춤') + '</button>'
+    +     '<button id="full">전체 화면</button>'
+    +     '<button id="reset">주소 바꾸기</button>'
+    +   '</div>'
+    + '</footer>'
+    + '</div>';
+
+  el("app").innerHTML = html;
+}
+
+function drawSetup(){
+  el("app").innerHTML = '<div class="setup"><div class="box">'
+    + '<h2>🪓 미션 실황판</h2>'
+    + '<p>교사용 결과판에 넣은 것과 <b>같은 주소</b>를 넣어 주세요.<br>'
+    +   '한 번 넣으면 이 기기에 저장되어 다음부터는 바로 열립니다.</p>'
+    + '<input type="text" id="ep" placeholder="https://script.google.com/macros/s/...../exec">'
+    + '<br><button id="go">시작하기</button>'
+    + '</div></div>';
+}
+
+/* ---------------- 조작 ---------------- */
+document.addEventListener("click", function(e){
+  var t = e.target;
+  if (t.id === "go"){
+    var v = el("ep").value.trim();
+    if (!v) return;
+    ST.endpoint = v; lsSet(LS_EP, v); load(); startTimer();
+    return;
+  }
+  if (t.id === "tgScore"){ ST.showScore = !ST.showScore; draw(); return; }
+  if (t.id === "tgLive"){
+    ST.live = !ST.live;
+    if (ST.live){ startTimer(); load(); } else { stopTimer(); draw(); }
+    return;
+  }
+  if (t.id === "full"){
+    try {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen();
+    } catch(err){}
+    return;
+  }
+  if (t.id === "reset"){ ST.endpoint = ""; lsSet(LS_EP, ""); stopTimer(); draw(); return; }
+});
+
+function startTimer(){ stopTimer(); ST.timer = setInterval(function(){ if (ST.live) load(); }, 10000); }
+function stopTimer(){ if (ST.timer){ clearInterval(ST.timer); ST.timer = null; } }
+
+/* ---------------- 시작 ---------------- */
+draw();
+if (ST.endpoint){ load(); startTimer(); }
+</script>
+</body>
+</html>
