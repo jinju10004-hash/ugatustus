@@ -306,7 +306,12 @@ document.addEventListener("click", function(e){
   if (t.id === "reset"){ ST.endpoint = ""; lsSet(LS_EP, ""); stopTimer(); draw(); return; }
 });
 
-function startTimer(){ stopTimer(); ST.timer = setInterval(function(){ if (ST.live) load(); }, 10000); }
+/* 갱신 주기. Google Apps Script 는 변화를 먼저 알려 주는 기능이 없어 주기적으로
+   물어보는 수밖에 없습니다. 3초면 체감상 즉시에 가깝고, 수업 한 시간 내내 켜 두어도
+   Apps Script 하루 사용량에 한참 못 미칩니다.
+   학생 기기는 폴링하지 않습니다 — 실황판과 결과판만 물어봅니다. */
+var 갱신주기 = 3000;
+function startTimer(){ stopTimer(); ST.timer = setInterval(function(){ if (ST.live) load(); }, 갱신주기); }
 function stopTimer(){ if (ST.timer){ clearInterval(ST.timer); ST.timer = null; } }
 
 /* ---------------- 시작 ---------------- */

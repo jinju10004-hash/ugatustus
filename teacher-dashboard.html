@@ -557,7 +557,7 @@ document.addEventListener("click", function(e){
   if (t.id === "refresh"){ load(); return; }
   if (t.id === "auto"){
     if (ST.autoTimer){ clearInterval(ST.autoTimer); ST.autoTimer = null; t.textContent = "자동 새로고침 끔"; t.classList.remove("on"); }
-    else { ST.autoTimer = setInterval(load, 30000); t.textContent = "자동 새로고침 켬 (30초)"; t.classList.add("on"); load(); }
+    else { ST.autoTimer = setInterval(load, 5000); t.textContent = "자동 새로고침 켬 (5초)"; t.classList.add("on"); load(); }
     return;
   }
   if (t.classList && t.classList.contains("basis")){
