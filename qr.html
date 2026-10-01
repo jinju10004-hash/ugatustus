@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우가투스투스 미션 QR 코드</title>
+<style>
+  :root{ --speech:#D96A14; --picture:#2E8B4F; --text:#2F6FD0; --ink:#241C14; --dim:#6C5C48; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;
+    background:#F4EFE4; color:var(--ink); padding:24px;
+  }
+  .wrap{max-width:1100px;margin:0 auto}
+  h1{font-size:28px;font-weight:900;letter-spacing:-.02em;margin-bottom:6px}
+  .lead{color:var(--dim);font-size:15px;margin-bottom:22px}
+
+  .cards{display:grid;gap:18px;grid-template-columns:1fr}
+  @media(min-width:780px){ .cards{grid-template-columns:repeat(3,1fr)} }
+
+  .card{
+    background:#fff;border-radius:18px;border-top:10px solid var(--c);
+    padding:22px 18px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.06);
+    break-inside:avoid; page-break-inside:avoid;
+  }
+  .card.speech{--c:var(--speech)} .card.picture{--c:var(--picture)} .card.text{--c:var(--text)}
+  .team{font-size:30px;font-weight:900;color:var(--c);margin-bottom:4px}
+  .sub{font-size:14px;color:var(--dim);margin-bottom:14px;min-height:20px}
+  .qr{width:100%;max-width:260px;aspect-ratio:1;margin:0 auto 14px;background:#fff}
+  .qr svg{width:100%;height:100%;display:block}
+  .url{
+    font-size:11.5px;color:var(--dim);word-break:break-all;line-height:1.5;
+    background:#F7F3EA;border-radius:8px;padding:8px 10px;
+  }
+  .note{margin-top:24px;font-size:14px;color:var(--dim);line-height:1.8}
+  .note b{color:var(--ink)}
+
+  .tools{margin:0 0 20px;display:flex;gap:8px;flex-wrap:wrap}
+  button{
+    font-family:inherit;font-size:14px;font-weight:800;padding:10px 16px;border-radius:10px;
+    border:1px solid #DED2BC;background:#fff;color:var(--ink);cursor:pointer;
+  }
+
+  @media print{
+    body{background:#fff;padding:0}
+    .tools,.note{display:none}
+    .cards{grid-template-columns:repeat(3,1fr);gap:10px}
+    .card{box-shadow:none;border:1px solid #ddd}
+    h1{font-size:22px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🪓 우가투스투스의 비밀 미션</h1>
+  <p class="lead">모둠별로 다른 QR을 나눠 주세요. 서로 다른 방법으로 제작 방법을 전달받습니다.</p>
+
+  <div class="tools">
+    <button onclick="window.print()">🖨️ 인쇄하기</button>
+    <button id="big">🔍 크게 보기 (전자칠판용)</button>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <p class="note">
+    <b>인쇄</b> — [인쇄하기]를 누르면 QR 세 개가 한 장에 나옵니다. 잘라서 모둠 책상에 놓으세요.<br>
+    <b>전자칠판</b> — [크게 보기]를 누르면 QR 하나씩 큼직하게 넘겨 볼 수 있습니다.<br>
+    <b>QR이 안 찍히면</b> — 아래 주소를 직접 입력해도 됩니다.
+  </p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+var BASE = "https://jinju10004-hash.github.io/ugatustus/";
+var MISSIONS = [
+  { cls:"speech",  team:"🗣️ 말팀",   sub:"듣고 기억해서 만들기", file:"mal.html" },
+  { cls:"picture", team:"🎨 그림팀", sub:"벽화를 보고 만들기",   file:"geurim.html" },
+  { cls:"text",    team:"📖 문자팀", sub:"일기를 읽고 만들기",   file:"munja.html" }
+];
+
+function qrSvg(url){
+  if (typeof qrcode === "undefined") return '<p style="font-size:13px;padding:20px">QR 만들기 도구를 불러오지 못했습니다.<br>아래 주소를 직접 입력해 주세요.</p>';
+  try {
+    var qr = qrcode(0, "M");       // 오류 보정 M — 조금 가려져도 읽힙니다
+    qr.addData(url);
+    qr.make();
+    return qr.createSvgTag({ scalable:true, margin:1 });
+  } catch(e){
+    return '<p style="font-size:13px;padding:20px">QR을 만들지 못했습니다.</p>';
+  }
+}
+
+var html = "";
+MISSIONS.forEach(function(m){
+  var url = BASE + m.file;
+  html += '<div class="card ' + m.cls + '">'
+       +    '<div class="team">' + m.team + '</div>'
+       +    '<div class="sub">' + m.sub + '</div>'
+       +    '<div class="qr">' + qrSvg(url) + '</div>'
+       +    '<div class="url">' + url + '</div>'
+       +  '</div>';
+});
+document.getElementById("cards").innerHTML = html;
+
+/* 전자칠판용 — QR 하나를 화면 가득 띄우고 클릭으로 넘깁니다 */
+var idx = 0;
+document.getElementById("big").addEventListener("click", function(){
+  var d = document.createElement("div");
+  d.style.cssText = "position:fixed;inset:0;background:#fff;z-index:99;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:3vh";
+  function paint(){
+    var m = MISSIONS[idx], url = BASE + m.file;
+    d.innerHTML = '<div style="font-size:5vh;font-weight:900;color:' + ({speech:'#D96A14',picture:'#2E8B4F',text:'#2F6FD0'}[m.cls]) + ';margin-bottom:1vh">' + m.team + '</div>'
+      + '<div style="width:62vh;height:62vh;max-width:90vw">' + qrSvg(url) + '</div>'
+      + '<div style="font-size:2.2vh;color:#6C5C48;margin-top:1.5vh">' + url + '</div>'
+      + '<div style="font-size:1.8vh;color:#9A8674;margin-top:2vh">화면을 누르면 다음 모둠 · Esc 닫기</div>';
+  }
+  paint();
+  d.addEventListener("click", function(){ idx = (idx + 1) % MISSIONS.length; paint(); });
+  document.body.appendChild(d);
+  function esc(e){ if (e.key === "Escape"){ d.remove(); document.removeEventListener("keydown", esc); } }
+  document.addEventListener("keydown", esc);
+});
+</script>
+</body>
+</html>
