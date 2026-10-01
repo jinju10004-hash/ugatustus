@@ -114,7 +114,9 @@ var ST = {
   showScore: false,
   live: true,
   timer: null,
-  lastOk: null
+  lastOk: null,
+  loaded: false,   // 한 번이라도 성공적으로 불러왔는지
+  error: null
 };
 
 function lsGet(k, d){ try { var v = localStorage.getItem(k); return v === null ? d : v; } catch(e){ return d; } }
@@ -159,9 +161,14 @@ function load(){
       };
     }).filter(function(r){ return r.이름 && r.미션; });
     ST.lastOk = new Date();
+    ST.loaded = true;
+    ST.error = null;
     draw();
-  }).catch(function(){
-    draw();   // 실패해도 마지막 화면은 그대로 둡니다
+  }).catch(function(e){
+    /* 불러오기에 실패했을 때 조용히 0명으로 보여 주면, 아무도 제출하지 않은 것과
+       구별할 수 없습니다. 수업 중에 이러면 오해하기 딱 좋아 상태를 분명히 밝힙니다. */
+    ST.error = (e && e.message) || "unknown";
+    draw();
   });
 }
 
@@ -179,6 +186,9 @@ function bestPerStudent(rows){
 function draw(){
   if (!ST.endpoint){ drawSetup(); return; }
 
+  /* 한 번도 못 불러왔으면 숫자를 보여 주지 않습니다. 0명과 구별이 안 되기 때문입니다. */
+  if (!ST.loaded){ drawStatus(); return; }
+
   var rows = bestPerStudent(ST.rows || []);
   var totalStudents = {};
   rows.forEach(function(r){ totalStudents[r.이름 + "#" + r.번호] = 1; });
@@ -190,6 +200,7 @@ function draw(){
     +   '<div class="sum">'
     +     '<span class="dot' + (ST.live ? '' : ' off') + '"></span>'
     +     '참여 <b>' + Object.keys(totalStudents).length + '</b>명 · 성공 <b>' + totalSuccess + '</b>명 · 미완성 <b>' + (rows.length - totalSuccess) + '</b>명'
+    +     (ST.error ? ' <span style="color:#FF8A6B">· 갱신 멈춤</span>' : '')
     +   '</div>'
     + '</header>'
     + '<div class="teams">';
@@ -245,6 +256,20 @@ function draw(){
   el("app").innerHTML = html;
 }
 
+/* 아직 한 번도 못 불러온 상태 — 연결 중이거나 실패했거나 */
+function drawStatus(){
+  var 실패 = !!ST.error;
+  el("app").innerHTML = '<div class="setup"><div class="box">'
+    + '<h2>' + (실패 ? '결과를 불러오지 못했습니다' : '결과를 불러오는 중…') + '</h2>'
+    + (실패
+      ? '<p>저장소에 연결하지 못했습니다. <b>학생이 제출하지 않은 것이 아니라, 연결 문제입니다.</b><br>'
+        + '인터넷 연결을 확인하거나, 아래 [주소 다시 넣기]로 저장소 주소를 넣어 주세요.</p>'
+        + '<p style="font-size:1.1vw">쓰고 있는 주소: <b>…' + esc(String(ST.endpoint).slice(-26)) + '</b></p>'
+        + '<button id="retry">다시 시도</button> <button id="reset">주소 다시 넣기</button>'
+      : '<p>잠시만 기다려 주세요.</p>')
+    + '</div></div>';
+}
+
 function drawSetup(){
   el("app").innerHTML = '<div class="setup"><div class="box">'
     + '<h2>🪓 미션 실황판</h2>'
@@ -277,6 +302,7 @@ document.addEventListener("click", function(e){
     } catch(err){}
     return;
   }
+  if (t.id === "retry"){ ST.error = null; draw(); load(); return; }
   if (t.id === "reset"){ ST.endpoint = ""; lsSet(LS_EP, ""); stopTimer(); draw(); return; }
 });
 
