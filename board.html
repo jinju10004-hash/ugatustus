@@ -95,6 +95,11 @@
    연결했다면 주소를 다시 넣을 필요가 없습니다.
    ============================================================ */
 var LS_EP = "ugatustus_teacher_endpoint";
+
+/* 기본 저장소 주소. 이 주소가 들어 있으면 어느 기기에서 열어도 바로 연결됩니다.
+   전자칠판처럼 긴 주소를 입력하기 번거로운 곳을 위한 것입니다.
+   바꾸시려면 아래 따옴표 안을 고치거나, 화면의 [주소 바꾸기] 버튼을 쓰세요. */
+var DEFAULT_EP = "https://script.google.com/macros/s/AKfycbzF8qY5lJ5kv6ZzKG6BR5iPr_C_Q6dthGGBgbdN2aZtQJUySz_x7DJWPuWtECcz1Eh4wg/exec";
 var TEAMS = [
   { key:"말",   cls:"speech",  emoji:"🗣️", label:"말팀" },
   { key:"그림", cls:"picture", emoji:"🎨", label:"그림팀" },
@@ -103,7 +108,7 @@ var TEAMS = [
 var SUCCESS = 90;   // 성공 기준 점수
 
 var ST = {
-  endpoint: lsGet(LS_EP, ""),
+  endpoint: lsGet(LS_EP, "") || DEFAULT_EP,
   rows: null,
   seen: {},          // 이미 화면에 나온 학생 (새로 들어온 사람만 튀어나오게)
   showScore: false,
