@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우가투스투스의 미션지</title>
+<style>
+  :root{
+    --speech:#A8480C; --picture:#3F6B2A; --text:#2A4F85;
+    --ink:#3A2A17; --ink2:#6B553A;
+    --paper:#E9DAB6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;
+    background:#2B2015; padding:24px; color:var(--ink);
+  }
+  .tools{max-width:210mm;margin:0 auto 18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .tools h1{color:#E9DAB6;font-size:20px;font-weight:900;margin-right:auto}
+  button{
+    font-family:inherit;font-size:14px;font-weight:800;padding:10px 16px;border-radius:10px;
+    border:1px solid #6B553A;background:#E9DAB6;color:#3A2A17;cursor:pointer;
+  }
+
+  /* ---------- 한 장 ---------- */
+  .sheet{
+    width:210mm; height:297mm; margin:0 auto 22px; position:relative; overflow:hidden;
+    padding:20mm 18mm;
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    /* 오래된 종이 — 누런 바탕에 얼룩을 겹칩니다 */
+    background-color:var(--paper);
+    background-image:
+      radial-gradient(ellipse 30% 22% at 12% 14%, rgba(150,110,55,.22), transparent 70%),
+      radial-gradient(ellipse 26% 18% at 88% 30%, rgba(140,100,50,.20), transparent 70%),
+      radial-gradient(ellipse 34% 24% at 76% 86%, rgba(120,85,40,.24), transparent 70%),
+      radial-gradient(ellipse 22% 16% at 24% 72%, rgba(160,120,60,.16), transparent 70%),
+      radial-gradient(circle at 50% 50%, rgba(255,246,222,.55), transparent 62%),
+      repeating-linear-gradient(94deg, rgba(120,90,45,.045) 0 2px, transparent 2px 7px),
+      repeating-linear-gradient(4deg, rgba(120,90,45,.035) 0 2px, transparent 2px 9px);
+    box-shadow:0 10px 30px rgba(0,0,0,.45);
+    /* 가장자리를 불규칙하게 뜯은 모양 */
+    clip-path:polygon(
+      1.2% 0.6%, 14% 1.6%, 29% 0.4%, 43% 1.8%, 58% 0.5%, 72% 1.7%, 87% 0.5%, 99% 1.4%,
+      98.6% 15%, 99.4% 30%, 98.4% 45%, 99.5% 60%, 98.5% 74%, 99.3% 88%, 98.8% 99.2%,
+      85% 98.4%, 70% 99.5%, 55% 98.3%, 41% 99.6%, 26% 98.4%, 12% 99.5%, 1% 98.6%,
+      1.6% 86%, 0.5% 71%, 1.7% 56%, 0.4% 41%, 1.6% 27%, 0.5% 13%
+    );
+  }
+  /* 모서리 그을림 */
+  .sheet::before{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:
+      radial-gradient(circle at 0% 0%,   rgba(70,40,12,.42), transparent 16%),
+      radial-gradient(circle at 100% 0%, rgba(70,40,12,.36), transparent 14%),
+      radial-gradient(circle at 0% 100%, rgba(70,40,12,.38), transparent 15%),
+      radial-gradient(circle at 100% 100%, rgba(70,40,12,.44), transparent 17%);
+  }
+
+  .axe{width:26mm;margin-bottom:3mm;opacity:.85}
+  .era{font-size:11pt;letter-spacing:.3em;color:var(--ink2);font-weight:700}
+  .title{font-size:30pt;font-weight:900;letter-spacing:-.02em;line-height:1.15;margin:2mm 0 1mm}
+  .rule{width:60%;height:2px;background:var(--ink);opacity:.35;margin:3mm 0 5mm;
+        clip-path:polygon(0 40%,8% 0,20% 60%,33% 10%,47% 70%,60% 15%,74% 65%,88% 20%,100% 50%,100% 100%,0 100%)}
+
+  .story{font-size:12.5pt;line-height:2;color:var(--ink);max-width:150mm}
+  .story b{font-weight:900}
+
+  /* 모둠 띠 */
+  .band{
+    margin:6mm 0 4mm;padding:3mm 9mm;border-radius:2mm;
+    background:var(--c);color:#F6EBD2;font-size:19pt;font-weight:900;letter-spacing:.02em;
+    box-shadow:0 2px 0 rgba(0,0,0,.25);
+  }
+  .sheet.speech{--c:var(--speech)} .sheet.picture{--c:var(--picture)} .sheet.text{--c:var(--text)}
+  .order{font-size:14pt;font-weight:800;color:var(--ink);line-height:1.8;margin-bottom:5mm;max-width:150mm}
+
+  /* QR 자리 */
+  .qrbox{
+    background:#FBF4E2;padding:5mm;border:3px solid var(--ink);border-radius:2mm;
+    box-shadow:0 3px 0 rgba(0,0,0,.2); margin-bottom:3mm;
+  }
+  .qrbox svg{width:52mm;height:52mm;display:block}
+  .qrhow{font-size:11.5pt;font-weight:800;color:var(--ink);line-height:1.7}
+  .qrurl{font-size:8pt;color:var(--ink2);margin-top:1.5mm;word-break:break-all}
+
+  .spacer{flex:1}
+  .name{
+    width:100%;max-width:150mm;display:flex;gap:8mm;align-items:flex-end;
+    font-size:13pt;font-weight:800;color:var(--ink);
+  }
+  .name .f{flex:1;display:flex;align-items:flex-end;gap:3mm}
+  .name .line{flex:1;border-bottom:2.5px dotted var(--ink2);height:9mm}
+  .seal{
+    position:absolute;right:16mm;bottom:16mm;width:26mm;height:26mm;border-radius:50%;
+    background:var(--c);opacity:.9;display:flex;align-items:center;justify-content:center;
+    color:#F6EBD2;font-size:9pt;font-weight:900;line-height:1.3;transform:rotate(-8deg);
+    box-shadow:0 2px 0 rgba(0,0,0,.25);
+  }
+
+  @media print{
+    body{background:#fff;padding:0}
+    .tools{display:none}
+    .sheet{margin:0;box-shadow:none;page-break-after:always;break-after:page}
+    .sheet:last-child{page-break-after:auto}
+    @page{size:A4;margin:0}
+  }
+</style>
+</head>
+<body>
+
+<div class="tools">
+  <h1>🪓 우가투스투스의 미션지</h1>
+  <button onclick="window.print()">🖨️ 인쇄하기 (A4 3장)</button>
+</div>
+
+<div id="sheets"></div>
+
+<script>
+var BASE = "https://jinju10004-hash.github.io/ugatustus/";
+
+/* QR 격자. 인터넷이 없어도 인쇄되도록 미리 박아 두었습니다.
+   주소가 바뀌면 qr.html 에서 격자를 다시 뽑아 여기에 넣으세요. */
+var QR = {
+  "mal.html":"111111101000110011011011101111111,100000101001010010100011101000001,101110100001000001010000101011101,101110101111101110000010101011101,101110100101101001001000101011101,100000100010100001010010101000001,111111101010101010101010101111111,000000001101001001100010100000000,101101110111100001100111101001011,000110011101100010111111001101101,100010101001001001001001011111001,000000001001011010110001000101001,000011101101000000110011110011011,001010001111100010110000010100110,110100110000010110011010101011100,010010011000000010101101111001100,000101111100111100011101011010100,010010011000110101001101111011011,011010100100111101001110100110110,000100010111101010000000110010011,010011101011011000100111100101111,100010000010111101111101011001101,001011111010101010101001100100011,010110011000100010011010111011010,101011110001000111000000111110010,000000001110001111011111100011000,111111101011001000010101101010000,100000101101011100001101100011101,101110100000100101000111111110110,101110101011100000101011000101001,101110101000111001000100001101000,100000100011101111101000111110001,111111101001011111101111010010100",
+  "geurim.html":"111111101010000010011111101111111,100000101101001011100111101000001,101110100111011000010000101011101,101110101101000101001010101011101,101110100101000011010000101011101,100000100111000111010010101000001,111111101010101010101010101111111,000000001110001111101010100000000,101101110001100101100111101001011,001000001110010011111111001101101,011110110110110001101011011111001,000110010101100010110001000101001,101011101100001011010011110011011,000101010111001000010010010100110,100001100010100000010010101011100,010101000110101100111101111001100,101100101001101000011101011010100,111010000011000101001001111011011,010100110001100100001110100110110,010110010011000011000010110010011,000111111001000010000101100101111,100011001110111111110111011001101,001110111001001100100001100100011,010010011001111100011010111011001,101011100010010011010000111110010,000000001001000110011011100011000,111111101010100001110111101010000,100000101100001101101101100011101,101110100111011111101111111110110,101110101000000010001011000101001,101110101000000111001100001101000,100000100001001001101000111110001,111111101111100011101111010010100",
+  "munja.html":"111111101101010011011011101111111,100000101011010011100011101000001,101110100111000000110000101011101,101110101011101111000010101011101,101110100010101001010010101011101,100000100000100001010010101000001,111111101010101010101010101111111,000000001110001001100010100000000,101101110110100001110111101001011,100011000111000011111111001101101,110110101011101001101011011111001,010011011001011010010001000101001,111011111010000000111011110011011,001110000000010010010000010100110,000011100000011110010010101011100,101110011110101010100101111001100,011011111100100100011101011010100,111111010110011101001101111011011,111011101100011101001010100110110,101010001100000010000000110010011,111010110001101000100101100101111,101100001101111101111101011001101,001111111011001010101001100100011,010000000000101010001010111011011,100101111111110111010000111110010,000000001011111111011111100011000,111111101011001000010111101010000,100000101100001100001101100011101,101110100010010101001111111110110,101110101101011000100011000101001,101110101110101001001100001101000,100000100110100111101000111110001,111111101110111111111111010010100"
+};
+
+/* 격자를 SVG 로 그립니다. 가로로 이어진 칸은 한 덩어리로 묶어 가볍게 만듭니다. */
+function qrSvg(file){
+  var rows = QR[file].split(","), n = rows.length, q = 4, size = n + q * 2;
+  var rects = "";
+  for (var r = 0; r < n; r++){
+    var line = rows[r], c = 0;
+    while (c < n){
+      if (line[c] === "1"){
+        var s = c;
+        while (c < n && line[c] === "1") c++;
+        rects += '<rect x="' + (s + q) + '" y="' + (r + q) + '" width="' + (c - s) + '" height="1"/>';
+      } else c++;
+    }
+  }
+  return '<svg viewBox="0 0 ' + size + ' ' + size + '" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'
+       + '<rect width="' + size + '" height="' + size + '" fill="#fff"/>'
+       + '<g fill="#201509">' + rects + '</g></svg>';
+}
+
+/* 돌도끼 — 긴 나무 손잡이에 뾰족한 돌을 넝쿨로 묶은 모양 */
+var AXE = '<svg class="axe" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">'
+  + '<g stroke="#3A2A17" stroke-linecap="round" stroke-linejoin="round">'
+  /* 손잡이 */
+  + '<path d="M50 30 L50 124" fill="none" stroke-width="7"/>'
+  + '<path d="M50 30 L50 124" fill="none" stroke="#E9DAB6" stroke-width="2" opacity=".5"/>'
+  /* 돌날 — 왼쪽으로 뻗은 쐐기 */
+  + '<path d="M50 18 L16 30 L10 46 L24 58 L50 50 Z" fill="#3A2A17" fill-opacity=".22" stroke-width="4"/>'
+  + '<path d="M16 30 L26 44 L10 46" fill="none" stroke-width="2.2" opacity=".55"/>'
+  /* 돌날 — 오른쪽 짧은 쪽 */
+  + '<path d="M50 20 L74 30 L78 44 L66 54 L50 48 Z" fill="#3A2A17" fill-opacity=".14" stroke-width="4"/>'
+  /* 넝쿨 묶음 */
+  + '<path d="M40 34 L62 42 M40 44 L62 52 M42 54 L60 60" fill="none" stroke-width="3.2"/>'
+  /* 손잡이 결 */
+  + '<path d="M50 74 l0 10 M50 94 l0 10" fill="none" stroke="#E9DAB6" stroke-width="2.4" opacity=".45"/>'
+  + '</g></svg>';
+
+var SHEETS = [
+  { cls:"speech", file:"mal.html", band:"말로 전해 받는 자",
+    order:"우가투스투스가 너에게 <b>직접 말해 줄 것이다.</b><br>그는 바빠서 <b>단 한 번</b>만 이야기한다.<br>귀를 기울이고, 머릿속에 단단히 새겨라.",
+    seal:"들어라<br>한 번뿐" },
+  { cls:"picture", file:"geurim.html", band:"그림으로 전해 받는 자",
+    order:"우가투스투스가 동굴 벽에 남긴 <b>그림</b>을 보아라.<br>그 시절에는 <b>글자가 없었다.</b><br>그림만 보고 알아내야 한다.",
+    seal:"보아라<br>글자 없다" },
+  { cls:"text", file:"munja.html", band:"글로 전해 받는 자",
+    order:"우가투스투스가 남긴 <b>일기</b>를 읽어라.<br>글로 적어 두었으니 <b>몇 번이든 다시</b> 읽어도 좋다.<br>천천히, 빠뜨리지 말고 읽어라.",
+    seal:"읽어라<br>다시 읽어도<br>좋다" }
+];
+
+var html = "";
+SHEETS.forEach(function(s){
+  var url = BASE + s.file;
+  html += '<div class="sheet ' + s.cls + '">'
+       +    AXE
+       +    '<div class="era">지금으로부터 15만 3000년 전</div>'
+       +    '<div class="title">우가투스투스의<br>비밀 미션</div>'
+       +    '<div class="rule"></div>'
+       +    '<p class="story">나는 <b>우가우가 우가투스투스</b>.<br>'
+       +      '지구에서 가장 강한 무기, <b>돌도끼</b>를 만들어 낸 사람이다.<br>'
+       +      '허나 나는 병들어 오래 살지 못한다.<br>'
+       +      '내가 사라지기 전에 이 지식을 너에게 넘긴다.</p>'
+       +    '<div class="band">' + s.band + '</div>'
+       +    '<p class="order">' + s.order + '</p>'
+       +    '<div class="qrbox">' + qrSvg(s.file) + '</div>'
+       +    '<p class="qrhow">이 표식에 손전화를 비추어라.<br>나의 지식이 열릴 것이다.</p>'
+       +    '<p class="qrurl">' + url + '</p>'
+       +    '<div class="spacer"></div>'
+       +    '<div class="name">'
+       +      '<span class="f">이름 <span class="line"></span></span>'
+       +      '<span class="f" style="flex:.5">번호 <span class="line"></span></span>'
+       +    '</div>'
+       +    '<div class="seal">' + s.seal + '</div>'
+       +  '</div>';
+});
+document.getElementById("sheets").innerHTML = html;
+</script>
+</body>
+</html>
