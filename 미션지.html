@@ -25,7 +25,7 @@
   /* ---------- 한 장 ---------- */
   .sheet{
     width:210mm; height:297mm; margin:0 auto 22px; position:relative; overflow:hidden;
-    padding:20mm 18mm;
+    padding:12mm 12mm;
     display:flex; flex-direction:column; align-items:center; text-align:center;
     /* 오래된 종이 — 누런 바탕에 얼룩을 겹칩니다 */
     background-color:var(--paper);
@@ -56,39 +56,33 @@
       radial-gradient(circle at 100% 100%, rgba(70,40,12,.44), transparent 17%);
   }
 
-  .axe{width:26mm;margin-bottom:3mm;opacity:.85}
+  .axe{width:15mm;margin-bottom:1mm;opacity:.85}
   .era{font-size:11pt;letter-spacing:.3em;color:var(--ink2);font-weight:700}
-  .title{font-size:30pt;font-weight:900;letter-spacing:-.02em;line-height:1.15;margin:2mm 0 1mm}
-  .rule{width:60%;height:2px;background:var(--ink);opacity:.35;margin:3mm 0 5mm;
+  .title{font-size:25pt;font-weight:900;letter-spacing:-.02em;line-height:1.12;margin:1mm 0 0}
+  .rule{width:55%;height:2px;background:var(--ink);opacity:.35;margin:2mm 0 3mm;
         clip-path:polygon(0 40%,8% 0,20% 60%,33% 10%,47% 70%,60% 15%,74% 65%,88% 20%,100% 50%,100% 100%,0 100%)}
 
-  .story{font-size:12.5pt;line-height:2;color:var(--ink);max-width:150mm}
+  .story{font-size:11pt;line-height:1.75;color:var(--ink);max-width:150mm}
   .story b{font-weight:900}
 
   /* 모둠 띠 */
   .band{
-    margin:6mm 0 4mm;padding:3mm 9mm;border-radius:2mm;
-    background:var(--c);color:#F6EBD2;font-size:19pt;font-weight:900;letter-spacing:.02em;
+    margin:3mm 0 2mm;padding:2.5mm 8mm;border-radius:2mm;
+    background:var(--c);color:#F6EBD2;font-size:17pt;font-weight:900;letter-spacing:.02em;
     box-shadow:0 2px 0 rgba(0,0,0,.25);
   }
   .sheet.speech{--c:var(--speech)} .sheet.picture{--c:var(--picture)} .sheet.text{--c:var(--text)}
-  .order{font-size:14pt;font-weight:800;color:var(--ink);line-height:1.8;margin-bottom:5mm;max-width:150mm}
+  .order{font-size:12.5pt;font-weight:800;color:var(--ink);line-height:1.7;margin-bottom:3mm;max-width:150mm}
 
   /* QR 자리 */
   .qrbox{
-    background:#FBF4E2;padding:6mm;border:4px solid var(--ink);border-radius:2mm;
+    background:#FBF4E2;padding:5mm;border:4px solid var(--ink);border-radius:2mm;
     box-shadow:0 3px 0 rgba(0,0,0,.2); margin-bottom:3mm;
   }
-  .qrbox svg{width:88mm;height:88mm;display:block}
-  .qrhow{font-size:11.5pt;font-weight:800;color:var(--ink);line-height:1.7}
+  .qrbox svg{width:150mm;height:150mm;display:block}
+  .qrhow{font-size:12pt;font-weight:800;color:var(--ink);line-height:1.6;margin-top:1mm}
   .qrurl{font-size:8pt;color:var(--ink2);margin-top:1.5mm;word-break:break-all}
 
-  .spacer{flex:1}
-  .name{
-    width:100%;max-width:150mm;display:flex;gap:8mm;align-items:flex-end;
-    font-size:13pt;font-weight:800;color:var(--ink);
-  }
-  .name .f{flex:1;display:flex;align-items:flex-end;gap:3mm}
   .name .line{flex:1;border-bottom:2.5px dotted var(--ink2);height:9mm}
   .seal{
     position:absolute;right:16mm;bottom:16mm;width:26mm;height:26mm;border-radius:50%;
