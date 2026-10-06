@@ -76,10 +76,10 @@
 
   /* QR 자리 */
   .qrbox{
-    background:#FBF4E2;padding:5mm;border:3px solid var(--ink);border-radius:2mm;
+    background:#FBF4E2;padding:6mm;border:4px solid var(--ink);border-radius:2mm;
     box-shadow:0 3px 0 rgba(0,0,0,.2); margin-bottom:3mm;
   }
-  .qrbox svg{width:52mm;height:52mm;display:block}
+  .qrbox svg{width:88mm;height:88mm;display:block}
   .qrhow{font-size:11.5pt;font-weight:800;color:var(--ink);line-height:1.7}
   .qrurl{font-size:8pt;color:var(--ink2);margin-top:1.5mm;word-break:break-all}
 
@@ -164,13 +164,13 @@ var AXE = '<svg class="axe" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/
 
 var SHEETS = [
   { cls:"speech", file:"mal.html", band:"말로 전해 받는 자",
-    order:"우가투스투스가 너에게 <b>직접 말해 줄 것이다.</b><br>그는 바빠서 <b>단 한 번</b>만 이야기한다.<br>귀를 기울이고, 머릿속에 단단히 새겨라.",
+    order:"내가 <b>직접 말해 주겠다.</b><br><b>단 한 번뿐이다.</b> 귀 기울여 새겨라.",
     seal:"들어라<br>한 번뿐" },
   { cls:"picture", file:"geurim.html", band:"그림으로 전해 받는 자",
-    order:"우가투스투스가 동굴 벽에 남긴 <b>그림</b>을 보아라.<br>그 시절에는 <b>글자가 없었다.</b><br>그림만 보고 알아내야 한다.",
+    order:"동굴 벽에 남긴 <b>그림</b>을 보아라.<br><b>글자는 없다.</b> 그림만으로 알아내라.",
     seal:"보아라<br>글자 없다" },
   { cls:"text", file:"munja.html", band:"글로 전해 받는 자",
-    order:"우가투스투스가 남긴 <b>일기</b>를 읽어라.<br>글로 적어 두었으니 <b>몇 번이든 다시</b> 읽어도 좋다.<br>천천히, 빠뜨리지 말고 읽어라.",
+    order:"내가 쓴 <b>일기</b>를 읽어라.<br><b>몇 번이든 다시</b> 읽어도 좋다.",
     seal:"읽어라<br>다시 읽어도<br>좋다" }
 ];
 
@@ -183,19 +183,14 @@ SHEETS.forEach(function(s){
        +    '<div class="title">우가투스투스의<br>비밀 미션</div>'
        +    '<div class="rule"></div>'
        +    '<p class="story">나는 <b>우가우가 우가투스투스</b>.<br>'
-       +      '지구에서 가장 강한 무기, <b>돌도끼</b>를 만들어 낸 사람이다.<br>'
-       +      '허나 나는 병들어 오래 살지 못한다.<br>'
-       +      '내가 사라지기 전에 이 지식을 너에게 넘긴다.</p>'
+       +      '지구 최강의 무기 <b>돌도끼</b>를 만든 사람이다.<br>'
+       +      '오래 살지 못하니, 이 지식을 너에게 넘긴다.</p>'
        +    '<div class="band">' + s.band + '</div>'
        +    '<p class="order">' + s.order + '</p>'
        +    '<div class="qrbox">' + qrSvg(s.file) + '</div>'
-       +    '<p class="qrhow">이 표식에 손전화를 비추어라.<br>나의 지식이 열릴 것이다.</p>'
+       +    '<p class="qrhow">이 표식을 비추어라.</p>'
        +    '<p class="qrurl">' + url + '</p>'
        +    '<div class="spacer"></div>'
-       +    '<div class="name">'
-       +      '<span class="f">이름 <span class="line"></span></span>'
-       +      '<span class="f" style="flex:.5">번호 <span class="line"></span></span>'
-       +    '</div>'
        +    '<div class="seal">' + s.seal + '</div>'
        +  '</div>';
 });
