@@ -95,6 +95,7 @@
    연결했다면 주소를 다시 넣을 필요가 없습니다.
    ============================================================ */
 var LS_EP = "ugatustus_teacher_endpoint";
+var LS_FIRST = "ugatustus_board_first_only";   // 학생을 처음 제출한 미션에서만 셀지
 
 /* 기본 저장소 주소. 이 주소가 들어 있으면 어느 기기에서 열어도 바로 연결됩니다.
    전자칠판처럼 긴 주소를 입력하기 번거로운 곳을 위한 것입니다.
@@ -112,6 +113,7 @@ var ST = {
   rows: null,
   seen: {},          // 이미 화면에 나온 학생 (새로 들어온 사람만 튀어나오게)
   showScore: false,
+  firstOnly: lsGet(LS_FIRST, "1") !== "0",   // 기본: 처음 제출한 미션만 집계
   live: true,
   timer: null,
   lastOk: null,
@@ -182,6 +184,36 @@ function bestPerStudent(rows){
   return Object.keys(map).map(function(k){ return map[k]; });
 }
 
+/* 한 학생이 자기 미션을 끝낸 뒤 다른 팀 미션까지 해 보는 경우가 있습니다.
+   그 기록을 그대로 세면 남의 팀 성공률과 평균이 흔들려,
+   "어느 전달 방법이 어려웠나" 라는 이 수업의 비교가 망가집니다.
+   그래서 학생마다 '맨 처음 제출한 미션' 하나만 세는 것을 기본으로 둡니다.
+   학생이 한 미션만 했다면 결과는 어느 쪽이든 똑같습니다. */
+function firstMissionOnly(rows){
+  var first = {};                                   // 이름#번호 -> 가장 먼저 낸 미션
+  rows.forEach(function(r){
+    var who = r.이름 + "#" + r.번호;
+    var t = String(r.제출일시 || "");
+    if (!first[who] || t < first[who].t) first[who] = { t:t, 미션:r.미션 };
+  });
+  return rows.filter(function(r){
+    var f = first[r.이름 + "#" + r.번호];
+    return !f || r.미션 === f.미션;
+  });
+}
+
+/* 다른 팀 미션까지 해 본 학생이 몇 명인지 (안내 문구용) */
+function extraCount(rows){
+  var seen = {}, n = 0;
+  rows.forEach(function(r){
+    var who = r.이름 + "#" + r.번호;
+    if (!seen[who]) seen[who] = {};
+    seen[who][r.미션] = 1;
+  });
+  for (var k in seen){ if (Object.keys(seen[k]).length > 1) n++; }
+  return n;
+}
+
 /* ---------------- 그리기 ---------------- */
 function draw(){
   if (!ST.endpoint){ drawSetup(); return; }
@@ -189,7 +221,9 @@ function draw(){
   /* 한 번도 못 불러왔으면 숫자를 보여 주지 않습니다. 0명과 구별이 안 되기 때문입니다. */
   if (!ST.loaded){ drawStatus(); return; }
 
-  var rows = bestPerStudent(ST.rows || []);
+  var allRows = bestPerStudent(ST.rows || []);
+  var extras  = extraCount(allRows);
+  var rows    = ST.firstOnly ? firstMissionOnly(allRows) : allRows;
   var totalStudents = {};
   rows.forEach(function(r){ totalStudents[r.이름 + "#" + r.번호] = 1; });
   var totalSuccess = rows.filter(function(r){ return r.점수 >= SUCCESS; }).length;
@@ -201,6 +235,8 @@ function draw(){
     +     '<span class="dot' + (ST.live ? '' : ' off') + '"></span>'
     +     '참여 <b>' + Object.keys(totalStudents).length + '</b>명 · 성공 <b>' + totalSuccess + '</b>명 · 미완성 <b>' + (rows.length - totalSuccess) + '</b>명'
     +     (ST.error ? ' <span style="color:#FF8A6B">· 갱신 멈춤</span>' : '')
+    +     (extras ? '<span style="color:#F2C879"> · 다른 팀 미션도 해 본 학생 ' + extras + '명'
+                  + (ST.firstOnly ? ' (처음 미션만 셈)' : ' (모두 셈)') + '</span>' : '')
     +   '</div>'
     + '</header>'
     + '<div class="teams">';
@@ -243,9 +279,11 @@ function draw(){
 
   html += '</div>'
     + '<footer>'
-    +   '<div class="q">왜 같은 미션인데 팀마다 결과가 다를까요?</div>'
+    +   '<div class="q">똑같이 어려운 문제였는데, 왜 팀마다 결과가 다를까요?</div>'
     +   '<div class="ctrl">'
     +     '<button id="tgScore" class="' + (ST.showScore ? 'on' : '') + '">점수 ' + (ST.showScore ? '숨기기' : '보이기') + '</button>'
+    +     '<button id="tgFirst" class="' + (ST.firstOnly ? 'on' : '') + '">'
+    +       (ST.firstOnly ? '처음 미션만' : '모든 미션') + '</button>'
     +     '<button id="tgLive" class="' + (ST.live ? 'on' : '') + '">' + (ST.live ? '실시간 켬' : '멈춤') + '</button>'
     +     '<button id="full">전체 화면</button>'
     +     '<button id="reset">주소 바꾸기</button>'
@@ -290,6 +328,7 @@ document.addEventListener("click", function(e){
     return;
   }
   if (t.id === "tgScore"){ ST.showScore = !ST.showScore; draw(); return; }
+  if (t.id === "tgFirst"){ ST.firstOnly = !ST.firstOnly; lsSet(LS_FIRST, ST.firstOnly ? "1" : "0"); draw(); return; }
   if (t.id === "tgLive"){
     ST.live = !ST.live;
     if (ST.live){ startTimer(); load(); } else { stopTimer(); draw(); }

@@ -38,10 +38,12 @@ $pitch = '-35%'
 # SAPI 한국어 음성은 쉼표나 연결어미에서 거의 쉬지 않아 말이 뭉개집니다.
 # 쉼표·문장 끝·연결어미 뒤에 쉼(break)을 직접 넣어 띄어읽기를 만들어 줍니다.
 # 쉼이 길다 싶으면 아래 숫자를 줄이세요.
-$쉼_문장끝   = 500   # 마침표 뒤
-$쉼_쉼표     = 260   # 쉼표 뒤
-$쉼_연결어미 = 170   # ~는데, ~니, ~고 같은 연결 지점
-$쉼_단락     = 800   # 단계와 단계 사이
+# 띄어읽기는 그대로 두고 쉼만 조금씩 줄여 전체를 빠르게 했습니다.
+# 말이 뭉개지면 안 되므로 쉼을 없애지는 않았습니다. (괄호 안이 이전 값)
+$쉼_문장끝   = 380   # 마침표 뒤        (500)
+$쉼_쉼표     = 200   # 쉼표 뒤          (260)
+$쉼_연결어미 = 130   # ~는데, ~니, ~고 같은 연결 지점 (170)
+$쉼_단락     = 600   # 단계와 단계 사이 (800)
 
 function Build-Ssml([string]$text) {
   $t = $text.Replace('&', '&amp;').Replace('<', '&lt;').Replace('>', '&gt;')
@@ -65,7 +67,10 @@ function Build-Ssml([string]$text) {
 function Make-Wav([string]$text, [string]$path) {
   $s = New-Object System.Speech.Synthesis.SpeechSynthesizer
   try { $s.SelectVoice($voiceName) } catch { }
-  $s.Rate = 2
+  # 말 속도. -10 ~ 10 이며 클수록 빠릅니다.
+  # 3 = 또박또박 들리면서도 한 번에 받아적기는 어려운 속도입니다.
+  # 너무 빠르면 2 로, 더 어렵게 하려면 4 로 바꾸고 음성만들기.ps1 을 다시 돌리세요.
+  $s.Rate = 3
   $s.SetOutputToWaveFile($path, $fmt)
   $ssml = "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='ko-KR'>" +
           "<prosody pitch='$pitch'>" + (Build-Ssml $text) + "</prosody></speak>"
@@ -80,6 +85,10 @@ $story = ($steps -join ' ... ')
 $total = 0
 $path = Join-Path $out 'story.wav'
 Make-Wav $story $path
+
+# 소리를 만들 때 쓴 대본을 그대로 남겨 둡니다.
+# 나중에 대본만 고치고 소리를 다시 만들지 않으면 검사\정답검증.ps1 이 잡아냅니다.
+[System.IO.File]::WriteAllText((Join-Path $out 'story.txt'), $story, (New-Object System.Text.UTF8Encoding($false)))
 $kb = [int]((Get-Item $path).Length / 1024)
 $total += $kb
 Write-Output ('  story.wav  {0,5} KB  (전체 이야기 한 파일)' -f $kb)

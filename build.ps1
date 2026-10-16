@@ -12,9 +12,9 @@ function DataUri($path) {
   return 'data:image/jpeg;base64,' + [Convert]::ToBase64String($bytes)
 }
 
-# ---- 부품 사진 20장 ----
+# ---- 부품 사진 21장 ----
 $cardIds = @('st_ok','st_w1','st_w2','st_w3','st_w4',
-             'hd_ok','hd_w1','hd_w2','hd_w3','hd_w4',
+             'hd_ok','hd_w2','hd_w3','hd_w4','hd_w5','hd_w6',
              'vn_ok','vn_w1','vn_w2','vn_w3',
              'or_ok','or_w1','or_w2','or_w3','or_w4','or_w5')
 $cardParts = @()
@@ -30,10 +30,13 @@ foreach ($n in 1..4) {
 }
 $muralsJs = $muralParts -join ','
 
+# file   : 선생님이 보시는 이름 (Canva Code 에 붙여넣을 때 씁니다)
+# deploy : 깃허브에 올라가는 이름 — 학생 QR 코드가 이 주소를 가리킵니다.
+#          두 파일은 반드시 같은 내용이어야 하므로 여기서 함께 만듭니다.
 $targets = @(
-  @{ id = 'speech';  file = '1_말미션_학생용.html'   },
-  @{ id = 'picture'; file = '2_그림미션_학생용.html' },
-  @{ id = 'text';    file = '3_문자미션_학생용.html' }
+  @{ id = 'speech';  file = '1_말미션_학생용.html';   deploy = 'mal.html'    },
+  @{ id = 'picture'; file = '2_그림미션_학생용.html'; deploy = 'geurim.html' },
+  @{ id = 'text';    file = '3_문자미션_학생용.html'; deploy = 'munja.html'  }
 )
 
 $enc = New-Object System.Text.UTF8Encoding($false)
@@ -46,7 +49,12 @@ foreach ($t in $targets) {
 
   $out = Join-Path $root $t.file
   [System.IO.File]::WriteAllText($out, $html, $enc)
-  Write-Output ('{0,-28} {1,7} KB' -f $t.file, [int]((Get-Item $out).Length / 1024))
+
+  # 깃허브 배포용 이름으로도 같은 내용을 내보냅니다 (학생 QR 코드가 가리키는 파일).
+  $dep = Join-Path $root $t.deploy
+  [System.IO.File]::WriteAllText($dep, $html, $enc)
+
+  Write-Output ('{0,-28} {1,7} KB   →  {2}' -f $t.file, [int]((Get-Item $out).Length / 1024), $t.deploy)
 }
 
 $td = Join-Path $root 'teacher-dashboard.html'
