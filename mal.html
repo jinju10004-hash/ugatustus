@@ -138,6 +138,8 @@
   }
   .modal .inner{background:var(--paper);border-radius:16px;max-width:760px;width:100%;max-height:88vh;overflow:auto;padding:20px}
   .modal img{width:100%;border-radius:12px}
+  .confirmlist{margin:14px 0 4px;padding-left:20px;line-height:1.9;font-size:16px}
+  .confirmlist li{margin-bottom:2px}
 
   /* ---------- material cards ---------- */
   .cat{margin:22px 0 0}
@@ -163,10 +165,18 @@
     display:none;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.3);
   }
   .card.sel .tick{display:flex}
+  /* 아래에 붙어 따라다니는 제출 막대입니다.
+     예전에는 바탕이 거의 비쳐서, 막대에 가려진 카드를 누르려다
+     제출 단추가 눌리는 일이 있었습니다. 그래서 바탕을 불투명하게 하고
+     위쪽에 선을 그어 '여기부터는 단추'임을 분명히 했습니다. */
   .picked{
-    position:sticky;bottom:0;margin-top:18px;padding:16px 0 8px;z-index:6;
-    background:linear-gradient(transparent, var(--paper) 26%);
+    position:sticky;bottom:0;margin-top:18px;padding:14px 0 10px;z-index:6;
+    background:var(--paper);
+    box-shadow:0 -10px 14px -6px rgba(0,0,0,.10);
+    border-top:2px solid rgba(0,0,0,.10);
   }
+  /* 마지막 재료 줄이 제출 막대 뒤로 숨지 않도록 빈 자리를 남겨 둡니다. */
+  .cat:last-of-type{ padding-bottom:16px }
   .pickcount{font-weight:800;text-align:center;margin-bottom:10px;font-size:16px}
   .picked .btnrow{margin-top:0}
   .picked .btnrow .btn{flex:1 1 160px}
@@ -359,12 +369,31 @@ var DIARY = [
 ];
 
 /* ---------- 어려웠던 점 선택지 ---------- */
-var REFLECT_OPTIONS = [
-  "기억하기가 어려웠어요.",
-  "그림만 보고 알기 어려웠어요.",
-  "자세한 내용을 찾기 어려웠어요.",
-  "다시 확인할 수 있어서 쉬웠어요."
-];
+/* 어려웠던 점은 미션마다 다릅니다.
+   말은 '한 번 듣고 기억하기', 그림은 '그림만으로 정확히 알기',
+   문자는 '다시 읽을 수 있음'이 핵심이라 선택지를 따로 두었습니다.
+   학생이 고른 것이 그대로 수업 정리의 근거가 됩니다. */
+var REFLECT_BY_MISSION = {
+  speech: [
+    "한 번만 들려줘서 기억하기 어려웠어요.",
+    "말이 빨라서 중요한 말을 놓쳤어요.",
+    "들은 내용이 머릿속에서 섞였어요.",
+    "다시 들을 수 없어서 어려웠어요."
+  ],
+  picture: [
+    "그림으로는 정보를 정확하게 알기 어려워요.",
+    "색을 알기 어려워요.",
+    "그림이 무엇을 뜻하는지 헷갈렸어요.",
+    "그림을 다시 볼 수 없어서 어려웠어요."
+  ],
+  text: [
+    "글로 적혀 있어서 정확하게 알 수 있었어요.",
+    "다시 읽을 수 있어서 쉬웠어요.",
+    "글이 길어서 중요한 내용을 찾기 어려웠어요.",
+    "자세한 내용을 찾기 어려웠어요."
+  ]
+};
+var REFLECT_OPTIONS = REFLECT_BY_MISSION[MISSION_ID];
 
 /* ============================================================
    상태
@@ -715,12 +744,26 @@ function viewSelect(){
     out += '</div></div>';
   });
 
+  /* 네 가지를 다 고르기 전에는 제출할 수 없게 막습니다.
+     하나만 고르고 실수로 눌러 점수가 나와 버리면 다시 되돌릴 수 없기 때문입니다. */
+  var missing = CATEGORIES.filter(function(cat){
+    return !CARDS.some(function(c){ return c.cat === cat.id && S.selected[c.id]; });
+  });
+  var ready = (missing.length === 0);
+
   out += '<div class="picked">'
-      +    '<div class="pickcount">고른 재료 <b id="cnt">' + n + '</b>개</div>'
+      +    '<div class="pickcount">'
+      +      (ready
+         ? '네 가지를 모두 골랐어요 <b id="cnt">' + n + '</b>개 선택'
+         : '아직 <b>' + missing.length + '</b>가지를 안 골랐어요 — '
+           + missing.map(function(c){ return esc(c.name); }).join(' · '))
+      +    '</div>'
       +    '<div class="btnrow">'
       +      (MISSION_ID === "text" ? '<button class="btn ghost" id="backToDiary">📖 일기 다시 보러 가기</button>' : '')
-      +      '<button class="btn" id="submit"' + (S.submitting ? ' disabled' : '') + '>'
-      +        (S.submitting ? '<span class="spinner"></span> 결과 저장 중…' : '제출하기')
+      +      '<button class="btn" id="submit"'
+      +        ((S.submitting || !ready) ? ' disabled' : '') + '>'
+      +        (S.submitting ? '<span class="spinner"></span> 결과 저장 중…'
+                             : (ready ? '제출하기' : '네 가지를 모두 골라야 해요'))
       +      '</button>'
       +    '</div>'
       +  '</div>'
@@ -985,7 +1028,9 @@ document.addEventListener("click", function(e){
     return;
   }
 
-  if (t.closest && t.closest("#submit")){ submit(); return; }
+  if (t.closest && t.closest("#submit")){ askSubmit(); return; }
+  if (t.id === "confirmNo"){ closeModal(); return; }
+  if (t.id === "confirmYes"){ closeModal(); submit(); return; }
 
   var opt = t.closest && t.closest(".opt");
   if (opt && S.screen === "result"){
@@ -1033,12 +1078,44 @@ function openModal(inner){
 }
 function closeModal(){ var m = el("modal"); if (m) m.remove(); }
 
+/* 제출하기 전에 한 번 더 묻습니다.
+   한 번 제출하면 점수가 나오고 되돌릴 수 없는데, 아래 제출 막대가
+   마지막 줄 카드와 가까워 잘못 눌리는 일이 있었습니다. */
+function askSubmit(){
+  var list = "";
+  CATEGORIES.forEach(function(cat){
+    var mine = CARDS.filter(function(c){ return c.cat === cat.id && S.selected[c.id]; });
+    list += '<li><b>' + esc(cat.name) + '</b> — '
+          + (mine.length ? mine.map(function(c){ return esc(c.label); }).join(", ") : "고르지 않음")
+          + '</li>';
+  });
+  var d = document.createElement("div");
+  d.className = "modal"; d.id = "modal";
+  d.innerHTML = '<div class="inner">'
+    + '<h2>이대로 제출할까요?</h2>'
+    + '<p class="sub">제출하면 점수가 나오고, 고른 재료를 바꿀 수 없어요.</p>'
+    + '<ul class="confirmlist">' + list + '</ul>'
+    + '<div class="btnrow">'
+    +   '<button class="btn ghost" id="confirmNo">아니요, 더 볼래요</button>'
+    +   '<button class="btn" id="confirmYes">네, 제출할게요</button>'
+    + '</div></div>';
+  d.addEventListener("click", function(ev){ if (ev.target === d) closeModal(); });
+  document.body.appendChild(d);
+}
+
 /* ---------- 제출 ---------- */
 function submit(){
   if (S.submitting) return;                       // 중복 클릭 방지
   var picked = Object.keys(S.selected);
-  if (picked.length === 0){
-    S.saveError = "재료를 하나 이상 골라야 제출할 수 있어요.";
+  /* 버튼을 막아 두었지만, 실수로 두 번 눌리거나 하는 일이 없도록 여기서도 확인합니다.
+     한 번 제출하면 점수가 나오고 되돌릴 수 없으므로 반드시 네 가지를 다 골라야 합니다. */
+  var missing = CATEGORIES.filter(function(cat){
+    return !CARDS.some(function(c){ return c.cat === cat.id && S.selected[c.id]; });
+  });
+  if (missing.length > 0){
+    S.saveError = "아직 고르지 않은 것이 있어요 — "
+                + missing.map(function(c){ return c.name; }).join(", ")
+                + ". 네 가지를 모두 고른 뒤에 제출하세요.";
     render();
     return;
   }

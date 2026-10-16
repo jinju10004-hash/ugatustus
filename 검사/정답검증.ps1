@@ -362,6 +362,33 @@ foreach ($mid in @('speech','picture','text')) {
     foreach ($id in $SETS[$mid][$cat]) { if ($buildText -notlike ("*'" + $id + "'*")) { $notBuilt += $id } }
   }
 }
+# 학생 화면의 '어려웠던 점' 선택지와 교사용 결과판의 집계 목록이 같은가
+# (다르면 학생이 고른 것이 결과판에서 한 건도 안 세어집니다)
+$stuRef = @{}
+$refBlock = [regex]::Match($src, 'var REFLECT_BY_MISSION = \{(.*?)\n\};', 'Singleline').Groups[1].Value
+foreach ($rm in [regex]::Matches($refBlock, '(speech|picture|text)\s*:\s*\[(.*?)\]', 'Singleline')) {
+  $stuRef[$rm.Groups[1].Value] = @([regex]::Matches($rm.Groups[2].Value, '"([^"]*)"') | ForEach-Object { $_.Groups[1].Value })
+}
+$tdPath = Join-Path $root 'teacher-dashboard.html'
+$tdText = [System.IO.File]::ReadAllText($tdPath, [System.Text.Encoding]::UTF8)
+$tchRef = @{}
+$tBlock = [regex]::Match($tdText, 'var REASONS_BY_MISSION = \{(.*?)\n\};', 'Singleline').Groups[1].Value
+foreach ($tm in [regex]::Matches($tBlock, '"(말|그림|문자)"\s*:\s*\[(.*?)\]', 'Singleline')) {
+  $tchRef[$tm.Groups[1].Value] = @([regex]::Matches($tm.Groups[2].Value, '"([^"]*)"') | ForEach-Object { $_.Groups[1].Value })
+}
+$KO = @{ speech = '말'; picture = '그림'; text = '문자' }
+$refOk = $true
+foreach ($mid in @('speech','picture','text')) {
+  $a = $stuRef[$mid]
+  $b = @($tchRef[$KO[$mid]] | Where-Object { $_ -ne '기타' })
+  if (-not $a -or -not $b) { Bad ('어려웠던 점 선택지를 읽지 못했습니다: ' + $MISSION_NAME[$mid]); $refOk = $false; continue }
+  if (($a -join '|') -ne ($b -join '|')) {
+    Bad ($MISSION_NAME[$mid] + ' 어려웠던 점 선택지가 학생 화면과 결과판에서 다릅니다.')
+    $refOk = $false
+  }
+}
+if ($refOk) { Ok '어려웠던 점 선택지가 학생 화면과 결과판에서 일치합니다.' }
+
 if ($notBuilt.Count -eq 0) { Ok 'build.ps1 이 쓰이는 카드를 모두 심습니다.' }
 else { Bad ('build.ps1 에 빠진 카드: ' + (($notBuilt | Select-Object -Unique) -join ', ')) }
 
