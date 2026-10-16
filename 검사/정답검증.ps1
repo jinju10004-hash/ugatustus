@@ -88,11 +88,13 @@ $COND = @{
     or = @( @('색','흰','흰색 열매'), @('모양','네모','네모나게 깎고'),
             @('가시','없음','가시든 이파리든 하나도 남기지'), @('이파리','없음','가시든 이파리든 하나도 남기지') )
   }
-  # 그림 미션에는 색 조건을 하나도 넣지 않았습니다.
-  # 벽화에서 색이 전혀 구분되지 않아도 정답이 하나로 좁혀지는지 보기 위해서입니다.
-  # (벽화2는 흰 나무와 탄 나무를 밝고 어둡게 그려 놓았지만, 그것에 기대지 않습니다.)
+  # 그림 미션에서 색이 필요한 곳은 '돌' 한 군데뿐입니다.
+  # 벽화1의 돌에 푸른 안료를 칠해 두었고, 보기에는 검은 돌도 함께 들어 있습니다.
+  # 색을 지나친 학생은 여기서 미끄러집니다 (일부러 둔 자리입니다).
+  # 나머지 세 부품은 색을 전혀 몰라도 답이 하나로 좁혀집니다.
   picture = @{
-    st = @( @('이끼','있음','벽화1: 달과 새싹 = 이끼가 자람'), @('모양','뾰족','벽화1: 갈아서 뾰족하게') )
+    st = @( @('색','푸른','벽화1: 돌에 칠한 푸른 안료'),
+            @('이끼','있음','벽화1: 달과 새싹 = 이끼가 자람'), @('모양','뾰족','벽화1: 갈아서 뾰족하게') )
     hd = @( @('길이','긴','벽화2: 긴 통나무를 깎음'), @('구움','구움','벽화2: 모닥불에 굽는 장면') )
     vn = @( @('가시','없음','벽화3: 가시를 떼어 바닥에 흩뿌림'), @('이파리','있음','벽화3: 이파리 달린 넝쿨로 엮음') )
     or = @( @('모양','네모','벽화4: 열매를 네모로 깎음'), @('가시','있음','벽화4: 네모에 가시가 남아 있음'),
@@ -225,49 +227,69 @@ foreach ($cat in @('st','hd','vn','or')) {
 # ------------------------------------------------------------
 # 5) 난이도 — 함정 카드 총수가 세 미션 모두 같은가
 # ------------------------------------------------------------
-Head '■ 그림 미션이 색에 기대지 않는가'
-#   벽화는 동굴 그림이라 색이 흐릿하거나 아예 구분되지 않을 수 있습니다.
-#   "색을 하나도 못 알아보는 학생"을 가정하고도 답이 하나로 좁혀져야 합니다.
-$colorFree = $true
+Head '■ 그림 미션에서 색이 하는 일'
+#   그림 미션은 '돌' 한 군데에서만 색을 봐야 풀립니다. 색을 지나친 학생이
+#   검은 돌과 헷갈리도록 일부러 둔 자리입니다. 나머지 세 부품은 색을 몰라도 풀려야 합니다.
+$EXPECT_COLOR = @('st')     # 색이 꼭 필요한 부품
 foreach ($cat in @('st','hd','vn','or')) {
-  $used = @($COND['picture'][$cat] | Where-Object { $_[0] -eq '색' })
-  if ($used.Count -gt 0) {
-    Bad ($CAT_NAME[$cat] + ' 조건에 색이 들어 있습니다. 벽화로는 색을 장담할 수 없습니다.')
-    $colorFree = $false
-  }
-}
-if ($colorFree) { Ok '그림 미션 조건에 색이 하나도 쓰이지 않았습니다. 흑백으로 보여도 답이 나옵니다.' }
+  $needsColor = @($COND['picture'][$cat] | Where-Object { $_[0] -eq '색' }).Count -gt 0
 
-# 색을 빼고 남은 조건만으로도 정말 한 장만 남는지 다시 한 번 계산합니다.
-foreach ($cat in @('st','hd','vn','or')) {
+  # 색 조건을 빼고 계산해, 색이 정말 필요한지(또는 없어도 되는지) 확인합니다.
   $ids = $SETS['picture'][$cat]
   $surv = @()
   foreach ($id in $ids) {
     $pass = $true
-    foreach ($c in $COND['picture'][$cat]) { if ($POOL[$id].attr[$c[0]] -ne $c[1]) { $pass = $false; break } }
+    foreach ($c in $COND['picture'][$cat]) {
+      if ($c[0] -eq '색') { continue }
+      if ($POOL[$id].attr[$c[0]] -ne $c[1]) { $pass = $false; break }
+    }
     if ($pass) { $surv += $id }
   }
-  if ($surv.Count -eq 1 -and $surv[0] -eq $ids[0]) {
-    Ok ($CAT_NAME[$cat] + ' — 색 없이도 1장: ' + $POOL[$ids[0]].label)
+
+  if ($EXPECT_COLOR -contains $cat) {
+    if (-not $needsColor) { Bad ($CAT_NAME[$cat] + ' 에 색 조건이 없습니다. 여기서는 색을 봐야 합니다.') }
+    elseif ($surv.Count -le 1) {
+      Bad ($CAT_NAME[$cat] + ' 는 색을 안 봐도 풀립니다. 헷갈릴 자리가 되지 않습니다.')
+    } else {
+      Ok ($CAT_NAME[$cat] + ' — 색을 지나치면 ' + $surv.Count + '장 사이에서 헷갈립니다: ' +
+          (($surv | ForEach-Object { $POOL[$_].label }) -join ' / '))
+    }
   } else {
-    Bad ($CAT_NAME[$cat] + ' — 색을 빼면 ' + $surv.Count + '장이 남습니다. 그림팀이 찍어야 합니다.')
+    if ($needsColor) { Bad ($CAT_NAME[$cat] + ' 에 색 조건이 들어 있습니다. 여기는 색 없이 풀려야 합니다.') }
+    elseif ($surv.Count -eq 1 -and $surv[0] -eq $ids[0]) { Ok ($CAT_NAME[$cat] + ' — 색 없이도 1장: ' + $POOL[$ids[0]].label) }
+    else { Bad ($CAT_NAME[$cat] + ' — 색을 빼면 ' + $surv.Count + '장이 남습니다.') }
   }
 }
-# 보기 네 장 가운데 색이 같은 카드가 섞여 있어도 괜찮은지 (색을 못 봐도 헷갈릴 일이 없는지)
-foreach ($cat in @('st','hd','vn','or')) {
-  $ids = $SETS['picture'][$cat]
-  $ans = $ids[0]
-  foreach ($id in $ids) {
-    if ($id -eq $ans) { continue }
-    $diffNonColor = 0
-    foreach ($k in $POOL[$ans].attr.Keys) {
-      if ($k -eq '색') { continue }
-      if ($POOL[$id].attr[$k] -ne $POOL[$ans].attr[$k]) { $diffNonColor++ }
-    }
-    if ($diffNonColor -eq 0) {
-      Bad ($POOL[$id].label + ' 는 색 말고는 정답과 똑같습니다. 그림팀이 구분할 수 없습니다.')
+
+# 벽화 그림에 푸른 안료가 정말 칠해져 있는가 (파일을 직접 열어 픽셀을 셉니다)
+# 색 조건을 걸어 놓고 벽화는 흑백이면, 그림팀은 맞힐 길이 없습니다.
+Add-Type -AssemblyName System.Drawing
+$mp = Join-Path $root 'assets\mural\mural1.jpg'
+if (-not (Test-Path $mp)) { Bad 'assets\mural\mural1.jpg 가 없습니다.' }
+else {
+  $mi = [System.Drawing.Image]::FromFile($mp)
+  $mb = New-Object System.Drawing.Bitmap($mi); $mi.Dispose()
+  # 돌이 그려진 타원 안쪽만, 그것도 검은 선을 뺀 '칠한 면'만 셉니다.
+  # 양피지 바탕은 붉은빛(B < R)이라, B 가 R 보다 뚜렷이 크면 안료가 올라간 것입니다.
+  $blue = 0; $seen = 0
+  foreach ($s in @(@(403,264,66,38), @(658,292,28,24), @(157,196,28,38))) {
+    for ($y = $s[1]-$s[3]; $y -le $s[1]+$s[3]; $y++) {
+      for ($x = $s[0]-$s[2]; $x -le $s[0]+$s[2]; $x++) {
+        if ($x -lt 0 -or $y -lt 0 -or $x -ge $mb.Width -or $y -ge $mb.Height) { continue }
+        $dx = ($x - $s[0]) / [double]$s[2]; $dy = ($y - $s[1]) / [double]$s[3]
+        if ([math]::Sqrt($dx*$dx + $dy*$dy) -ge 1.0) { continue }      # 타원 밖은 돌이 아닙니다
+        $p = $mb.GetPixel($x, $y)
+        if ((0.299*$p.R + 0.587*$p.G + 0.114*$p.B) -lt 105) { continue }  # 윤곽선 제외
+        $seen++
+        if ($p.B -gt $p.R + 10) { $blue++ }
+      }
     }
   }
+  $mb.Dispose()
+  $pct = if ($seen) { [math]::Round($blue * 100.0 / $seen) } else { 0 }
+  if ($pct -ge 55) { Ok ('벽화1의 돌이 뚜렷하게 푸릅니다 (칠한 면의 ' + $pct + '%). 보고 알아낼 수 있습니다.') }
+  elseif ($pct -ge 25) { Warn ('벽화1의 돌이 옅게만 푸릅니다 (' + $pct + '%). 아이들이 못 알아볼 수 있습니다.') }
+  else { Bad ('벽화1의 돌이 푸르지 않습니다 (' + $pct + '%). 색 조건을 걸어 두면 그림팀이 맞힐 수 없습니다.') }
 }
 
 Head '■ 난이도 (정답과 한 가지만 다른 함정 카드 총수)'
@@ -275,8 +297,19 @@ $counts = @('speech','picture','text') | ForEach-Object { $trapHits[$_] }
 foreach ($mid in @('speech','picture','text')) {
   Write-Host ("  {0,-8} {1}장" -f $MISSION_NAME[$mid], $trapHits[$mid])
 }
-if (($counts | Select-Object -Unique).Count -eq 1) { Ok ('세 미션 모두 ' + $counts[0] + '장으로 같습니다.') }
-else { Bad '미션마다 함정 카드 수가 다릅니다. 한쪽이 더 어렵습니다.' }
+# 의도한 값입니다. 말·문자는 같게, 그림은 색 때문에 한 장 더 어렵게 두었습니다.
+# 여기 숫자와 달라지면 손댄 곳이 난이도를 흔든 것이므로 알려 줍니다.
+$WANT = @{ speech = 6; picture = 7; text = 6 }
+$drift = $false
+foreach ($mid in @('speech','picture','text')) {
+  if ($trapHits[$mid] -ne $WANT[$mid]) {
+    Bad ($MISSION_NAME[$mid] + ' 함정 카드가 ' + $trapHits[$mid] + '장입니다. 의도한 값은 ' + $WANT[$mid] + '장입니다.')
+    $drift = $true
+  }
+}
+if (-not $drift) {
+  Ok '말·문자는 6장으로 같고, 그림은 7장입니다 (돌에서 색을 봐야 하므로 한 장 더 어렵게 둔 것).'
+}
 
 # ------------------------------------------------------------
 # 6) 말 대본 — 핵심 낱말이 딱 한 번씩만 나오는가
