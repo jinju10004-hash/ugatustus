@@ -744,31 +744,52 @@ function viewSelect(){
     out += '</div></div>';
   });
 
-  /* 네 가지를 다 고르기 전에는 제출할 수 없게 막습니다.
-     하나만 고르고 실수로 눌러 점수가 나와 버리면 다시 되돌릴 수 없기 때문입니다. */
-  var missing = CATEGORIES.filter(function(cat){
-    return !CARDS.some(function(c){ return c.cat === cat.id && S.selected[c.id]; });
-  });
-  var ready = (missing.length === 0);
-
   out += '<div class="picked">'
-      +    '<div class="pickcount">'
-      +      (ready
-         ? '네 가지를 모두 골랐어요 <b id="cnt">' + n + '</b>개 선택'
-         : '아직 <b>' + missing.length + '</b>가지를 안 골랐어요 — '
-           + missing.map(function(c){ return esc(c.name); }).join(' · '))
-      +    '</div>'
+      +    '<div class="pickcount">' + pickedText() + '</div>'
       +    '<div class="btnrow">'
       +      (MISSION_ID === "text" ? '<button class="btn ghost" id="backToDiary">📖 일기 다시 보러 가기</button>' : '')
       +      '<button class="btn" id="submit"'
-      +        ((S.submitting || !ready) ? ' disabled' : '') + '>'
-      +        (S.submitting ? '<span class="spinner"></span> 결과 저장 중…'
-                             : (ready ? '제출하기' : '네 가지를 모두 골라야 해요'))
+      +        ((S.submitting || missingCats().length > 0) ? ' disabled' : '') + '>'
+      +        (S.submitting ? '<span class="spinner"></span> 결과 저장 중…' : submitText())
       +      '</button>'
       +    '</div>'
       +  '</div>'
       + '</div>';
   return out;
+}
+
+/* 네 가지를 다 고르기 전에는 제출할 수 없게 막습니다.
+   하나만 고르고 실수로 눌러 점수가 나와 버리면 되돌릴 수 없기 때문입니다.
+   아래 세 함수는 화면을 그릴 때와, 카드를 누를 때마다 똑같이 쓰입니다. */
+function missingCats(){
+  return CATEGORIES.filter(function(cat){
+    return !CARDS.some(function(c){ return c.cat === cat.id && S.selected[c.id]; });
+  });
+}
+function pickedText(){
+  var missing = missingCats();
+  if (!missing.length){
+    return '네 가지를 모두 골랐어요 <b id="cnt">' + Object.keys(S.selected).length + '</b>개 선택';
+  }
+  return '아직 <b>' + missing.length + '</b>가지를 안 골랐어요 — '
+       + missing.map(function(c){ return esc(c.name); }).join(' · ');
+}
+function submitText(){
+  return missingCats().length ? '네 가지를 모두 골라야 해요' : '제출하기';
+}
+
+/* 재료를 고르거나 취소할 때마다 아래 제출 막대만 고쳐 그립니다.
+   화면 전체를 다시 그리면 보던 자리가 맨 위로 튀어 버려, 카드를 누를 때는
+   막대만 손봅니다. 예전에는 이 자리를 빠뜨려서, 네 가지를 다 골라도
+   단추가 잠긴 채로 남아 제출이 되지 않았습니다. */
+function updatePickedBar(){
+  var bar = document.querySelector(".pickcount");
+  if (bar) bar.innerHTML = pickedText();
+  var b = el("submit");
+  if (b && !S.submitting){
+    b.disabled = (missingCats().length > 0);
+    b.textContent = submitText();
+  }
 }
 
 /* ---------- 화면 4 : 결과 ---------- */
@@ -1024,7 +1045,7 @@ document.addEventListener("click", function(e){
     if (S.selected[id]) delete S.selected[id]; else S.selected[id] = true;
     card.classList.toggle("sel");
     card.setAttribute("aria-pressed", S.selected[id] ? "true" : "false");
-    if (el("cnt")) el("cnt").textContent = Object.keys(S.selected).length;
+    updatePickedBar();          // 단추 잠금 상태도 같이 고쳐 줍니다
     return;
   }
 
@@ -1109,9 +1130,7 @@ function submit(){
   var picked = Object.keys(S.selected);
   /* 버튼을 막아 두었지만, 실수로 두 번 눌리거나 하는 일이 없도록 여기서도 확인합니다.
      한 번 제출하면 점수가 나오고 되돌릴 수 없으므로 반드시 네 가지를 다 골라야 합니다. */
-  var missing = CATEGORIES.filter(function(cat){
-    return !CARDS.some(function(c){ return c.cat === cat.id && S.selected[c.id]; });
-  });
+  var missing = missingCats();
   if (missing.length > 0){
     S.saveError = "아직 고르지 않은 것이 있어요 — "
                 + missing.map(function(c){ return c.name; }).join(", ")

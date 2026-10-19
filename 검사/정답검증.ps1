@@ -389,6 +389,22 @@ foreach ($mid in @('speech','picture','text')) {
 }
 if ($refOk) { Ok '어려웠던 점 선택지가 학생 화면과 결과판에서 일치합니다.' }
 
+# 카드를 누를 때 제출 막대도 같이 고쳐 그리는가
+#   카드 클릭은 화면 전체를 다시 그리지 않고 카드만 손봅니다(보던 자리가 튀지 않게).
+#   그래서 제출 단추의 잠금 상태를 거기서 같이 풀어 주지 않으면,
+#   네 가지를 다 골라도 단추가 잠긴 채 남아 제출이 아예 안 됩니다. (실제로 겪은 일)
+$clickBlock = [regex]::Match($src, 'closest\("\.card"\);(.*?)\n\s*\}', 'Singleline').Groups[1].Value
+if (-not $clickBlock) { Bad '카드 클릭 처리 부분을 찾지 못했습니다.' }
+elseif ($clickBlock -notmatch 'updatePickedBar\(\)') {
+  Bad '카드를 눌러도 제출 막대를 고쳐 그리지 않습니다 → 네 가지를 다 골라도 단추가 잠깁니다.'
+} else {
+  Ok '카드를 누를 때마다 제출 단추 잠금이 다시 계산됩니다.'
+}
+# 잠금 판단이 한 곳(missingCats)에서만 나오는가 — 두 벌로 갈라지면 또 어긋납니다
+$dupCount = ([regex]::Matches($src, 'CARDS\.some\(function\(c\)\{ return c\.cat === cat\.id')).Count
+if ($dupCount -gt 1) { Warn ('제출 조건 계산이 ' + $dupCount + '군데에 흩어져 있습니다. 한 곳으로 모으는 편이 안전합니다.') }
+else { Ok '제출 조건 계산이 missingCats() 한 곳에만 있습니다.' }
+
 if ($notBuilt.Count -eq 0) { Ok 'build.ps1 이 쓰이는 카드를 모두 심습니다.' }
 else { Bad ('build.ps1 에 빠진 카드: ' + (($notBuilt | Select-Object -Unique) -join ', ')) }
 
